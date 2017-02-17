@@ -1,0 +1,166 @@
+<?php
+namespace Netlogix\Nxgooglelocations\Service;
+
+use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
+use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
+use PHPExcel_Cell;
+use PHPExcel_IOFactory;
+use PHPExcel_Worksheet;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
+abstract class LocationFactory
+{
+    protected $templateFileName = '/dev/null';
+
+    /**
+     * @var FieldMap
+     */
+    protected $fieldMap;
+
+    /**
+     * @var string
+     */
+    protected $fieldMapClassName = FieldMap::class;
+
+    /**
+     * @var string
+     */
+    protected $recordTableName = '';
+
+    /**
+     * @var array<string>
+     */
+    protected $columnNameMap = [
+        'A' => 'title',
+        'B' => 'address',
+        'C' => 'alterantive_address',
+        'D' => 'latitude',
+        'E' => 'longitude',
+    ];
+
+    /**
+     * @var PHPExcel_Worksheet
+     */
+    protected $templateSheet;
+
+    /**
+     * @var PHPExcel_Worksheet
+     */
+    protected $contentSheet;
+
+    public function __construct()
+    {
+        $this->fieldMap = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class)->get($this->fieldMapClassName);
+        $this->reset();
+    }
+
+    public function reset()
+    {
+        $this->templateSheet = PHPExcel_IOFactory::load(GeneralUtility::getFileAbsFileName($this->templateFileName))->getActiveSheet();
+    }
+
+    public function load($fileName)
+    {
+        $this->contentSheet = PHPExcel_IOFactory::load(GeneralUtility::getFileAbsFileName($fileName))->getActiveSheet();
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function compareHeaderRows()
+    {
+        $template = $this->templateSheet->toArray();
+        $content = $this->contentSheet->toArray();
+
+        foreach ($template as $rowIndex => $rowData) {
+            if (!self::containsData($rowData)) {
+                continue;
+            }
+            foreach ($rowData as $columnIndex => $cellContent) {
+                if ($template[$rowIndex][$columnIndex] != $content[$rowIndex][$columnIndex]) {
+                    throw new \Exception(printf('Import header doesn\'t match import template at position "%s%s".', PHPExcel_Cell::stringFromColumnIndex($columnIndex), $rowIndex + 1));
+                }
+            }
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function getRecordsForValidRows()
+    {
+        $collection = $this->contentSheet->rangeToArray(
+            $this->getDataRange(),
+            $nullValue = null,
+            $calculateFormulas = true,
+            $formatData = true,
+            $returnCellRef = true
+        );
+        $collection = array_filter($collection, [$this, 'containsData']);
+        $collection = array_map([$this, 'mapDataRowToTcaRecord'], $collection);
+        return array_filter($collection, [$this, 'containsData']);
+    }
+
+    /**
+     * @param array $dataRow
+     * @return array
+     */
+    public function mapDataRowToTcaRecord(array $dataRow)
+    {
+        $result = [];
+        foreach ($this->columnNameMap as $tableColumnName => $tcaFieldName) {
+            $result[$tcaFieldName] = $dataRow[$tableColumnName];
+        }
+        return $result;
+    }
+
+    /**
+     * @param mixed $list
+     * @return bool
+     */
+    public static function containsData($list)
+    {
+        return !!array_filter($list, function ($field) {
+            if (is_array($field)) {
+                return self::containsData($field);
+            } else {
+                return !!$field;
+            }
+        });
+    }
+
+    /**
+     * @param array $tcaRecord
+     * @param CodingResult $codingResult
+     * @return array
+     */
+    public function writeCoordinatesToTcaRecord($tcaRecord, $codingResult = null)
+    {
+        $map = ['rawData', 'addressResultFromGeocoding', 'latitude', 'longitude', 'position', 'probability'];
+        foreach ($map as $fieldName) {
+            if ($this->fieldMap->__get($fieldName)) {
+                $tcaRecord[$this->fieldMap->__get($fieldName)] = $codingResult->__get($fieldName);
+                if (in_array($fieldName, ['rawData', 'position'])) {
+                    $tcaRecord[$this->fieldMap->__get($fieldName)] = json_encode($tcaRecord[$this->fieldMap->__get($fieldName)]);
+                }
+            }
+        }
+        return $tcaRecord;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRecordTableName()
+    {
+        return $this->recordTableName;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getDataRange()
+    {
+        return sprintf('A%d:%s%d', $this->templateSheet->getHighestRow() + 1, $this->contentSheet->getHighestColumn(), $this->contentSheet->getHighestRow());
+    }
+}
