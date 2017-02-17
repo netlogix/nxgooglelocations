@@ -106,9 +106,6 @@ class Batch
     protected function collectTcaRecords()
     {
         $tcaRecords = $this->locationFactory->getRecordsForValidRows();
-        while (count($tcaRecords) > 5) {
-            array_pop($tcaRecords);
-        }
 
         foreach ($tcaRecords as $id => $tcaRecord) {
             $tcaRecords[$id] = $this->mapTcaRecord($tcaRecord);
