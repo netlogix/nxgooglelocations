@@ -1,0 +1,20 @@
+{
+  "name": "netlogix/nxgooglelocations",
+  "type": "typo3-cms-extension",
+  "description": "Provide geocoding capability for arbitrary records through Google Maps API.",
+  "license": [
+    "MIT"
+  ],
+  "require": {
+    "typo3/cms-core": ">=7.6.0,<8.0",
+    "phpoffice/phpexcel": "^1.8"
+  },
+  "autoload": {
+    "psr-4": {
+      "Netlogix\\Nxgooglelocations\\": "Classes/"
+    }
+  },
+  "replace": {
+    "netlogix/nxgooglelocations": "self.version"
+  }
+}
