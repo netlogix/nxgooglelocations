@@ -110,7 +110,7 @@ abstract class Importer
      */
     public function writeExistingIdentifierToTcaRecord($recordTableName, array $tcaRecord)
     {
-        $existingRecord = $this->getExistingRecord($recordTableName, $tcaRecord);
+        $existingRecord = $this->getExistingRecord($recordTableName, $this->storagePageId, $tcaRecord);
         if ($existingRecord) {
             $tcaRecord['uid'] = $existingRecord['uid'];
         }
@@ -124,7 +124,7 @@ abstract class Importer
      */
     public function writeExistingCoordinatesToTcaRecord($recordTableName, array $tcaRecord)
     {
-        $existingRecord = $this->getExistingRecord($recordTableName, $tcaRecord);
+        $existingRecord = $this->getExistingRecord($recordTableName, $this->storagePageId, $tcaRecord);
         if ($existingRecord) {
             $tcaRecord[$this->fieldMap->latitude] = $existingRecord[$this->fieldMap->latitude];
             $tcaRecord[$this->fieldMap->longitude] = $existingRecord[$this->fieldMap->longitude];
@@ -134,7 +134,8 @@ abstract class Importer
 
     /**
      * @param array $tcaRecord
+     * @param int $storagePageId
      * @return array
      */
-    abstract public function getExistingRecord($recordTableName, array $tcaRecord);
+    abstract public function getExistingRecord($recordTableName, $storagePageId, array $tcaRecord);
 }

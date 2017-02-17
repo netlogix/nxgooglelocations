@@ -136,7 +136,7 @@ class Batch
     protected function mapTcaRecord($tcaRecord)
     {
         $tcaRecord = $this->importer->writeExistingIdentifierToTcaRecord($this->locationFactory->getRecordTableName(), $tcaRecord);
-        $existingRecord = (array)$this->importer->getExistingRecord($this->locationFactory->getRecordTableName(), $tcaRecord);
+        $existingRecord = (array)$this->importer->getExistingRecord($this->locationFactory->getRecordTableName(), $this->storagePageId, $tcaRecord);
 
         if ($this->geoCoder->needsToBeGeoCoded($tcaRecord)
             && !$this->geoCoder->needsToBeGeoCoded($existingRecord)
