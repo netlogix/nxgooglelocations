@@ -78,7 +78,7 @@ abstract class LocationFactory
             }
             foreach ($rowData as $columnIndex => $cellContent) {
                 if ($template[$rowIndex][$columnIndex] != $content[$rowIndex][$columnIndex]) {
-                    throw new \Exception(printf('Import header doesn\'t match import template at position "%s%s".', PHPExcel_Cell::stringFromColumnIndex($columnIndex), $rowIndex + 1));
+                    throw new \Exception(sprintf('Import header doesn\'t match import template at position "%s%s".', PHPExcel_Cell::stringFromColumnIndex($columnIndex), $rowIndex + 1));
                 }
             }
         }
