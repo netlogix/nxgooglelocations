@@ -31,9 +31,11 @@ $value = [
             'showitem' => '
                 type,
                 tstamp,
+                delete_unused,
                 state,
                 amount,
                 position,
+                geocoding_requests,
                 api_key,
                 storage_page_id,
                 backend_user_id,
@@ -77,6 +79,11 @@ $value = [
                 'required' => true,
             ]
         ],
+        'delete_unused' => [
+            'config' => [
+                'type' => 'check',
+            ],
+        ],
         'amount' => [
             'config' => [
                 'type' => 'input',
@@ -85,6 +92,13 @@ $value = [
             ],
         ],
         'position' => [
+            'config' => [
+                'type' => 'input',
+                'size' => 30,
+                'eval' => 'trim'
+            ],
+        ],
+        'geocoding_requests' => [
             'config' => [
                 'type' => 'input',
                 'size' => 30,

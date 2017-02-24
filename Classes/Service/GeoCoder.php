@@ -26,6 +26,14 @@ abstract class GeoCoder
     protected $fieldMapClassName = FieldMap::class;
 
     /**
+     * The number of geocoding results must be lower than this in order to make an existing
+     * record count as "doesn't need to be geocoded"
+     *
+     * @var int
+     */
+    protected $probabilityThreshold= 1;
+
+    /**
      * @var string
      */
     protected $apiKey;
@@ -51,7 +59,7 @@ abstract class GeoCoder
      */
     public function needsToBeGeoCoded(array $tcaRecord)
     {
-        return !$tcaRecord[$this->fieldMap->latitude] && !$tcaRecord[$this->fieldMap->longitude];
+        return (!$tcaRecord[$this->fieldMap->latitude] && !$tcaRecord[$this->fieldMap->longitude]) || ($tcaRecord[$this->fieldMap->probability] > $this->probabilityThreshold);
     }
 
     /**

@@ -98,6 +98,11 @@ class Batch extends AbstractEntity
     protected $position = 0;
 
     /**
+     * @var int
+     */
+    protected $geocodingRequests = 0;
+
+    /**
      * @var \DateTime
      */
     protected $tstamp;
@@ -240,6 +245,7 @@ class Batch extends AbstractEntity
 
         if ($this->getGeoCoder()->needsToBeGeoCoded($tcaRecord)) {
             try {
+                $this->geocodingRequests++;
                 $geoCodingAddress = $this->getGeoCoder()->getGeoCodingAddress($tcaRecord);
                 $codingResult = $this->getGeoCoder()->fetchCoordinatesForAddress($geoCodingAddress);
                 $tcaRecord = $this->getLocationFactory()->writeCoordinatesToTcaRecord($tcaRecord, $codingResult);

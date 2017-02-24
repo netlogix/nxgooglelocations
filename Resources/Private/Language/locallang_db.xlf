@@ -31,8 +31,14 @@
             <trans-unit id="tx_nxgooglelocations_domain_model_batch.state.I.closed">
                 <source xml:lang="en">Closed</source>
             </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.delete_unused">
+                <source xml:lang="en">Delete unused</source>
+            </trans-unit>
             <trans-unit id="tx_nxgooglelocations_domain_model_batch.amount">
                 <source xml:lang="en">Total locations</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.geocoding_requests">
+                <source xml:lang="en">Google requests</source>
             </trans-unit>
             <trans-unit id="tx_nxgooglelocations_domain_model_batch.position">
                 <source xml:lang="en">Processed locations</source>

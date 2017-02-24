@@ -6,8 +6,10 @@ CREATE TABLE tx_nxgooglelocations_domain_model_batch (
 	pid int(11) DEFAULT '0' NOT NULL,
 
 	state varchar(255) DEFAULT 'new' NOT NULL,
+	delete_unused tinyint(4) unsigned DEFAULT '0' NOT NULL,
 	amount int(11) DEFAULT '0' NOT NULL,
 	position int(11) DEFAULT '0' NOT NULL,
+	geocoding_requests int(11) DEFAULT '0' NOT NULL,
 
 	api_key varchar(255) DEFAULT '' NOT NULL,
 	storage_page_id int(11) DEFAULT '0' NOT NULL,
