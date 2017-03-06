@@ -77,8 +77,14 @@ abstract class LocationFactory
                 continue;
             }
             foreach ($rowData as $columnIndex => $cellContent) {
+                $coordinate = PHPExcel_Cell::stringFromColumnIndex($columnIndex) . ($rowIndex + 1);
                 if ($template[$rowIndex][$columnIndex] != $content[$rowIndex][$columnIndex]) {
-                    throw new \Exception(sprintf('Import header doesn\'t match import template at position "%s%s".', PHPExcel_Cell::stringFromColumnIndex($columnIndex), $rowIndex + 1));
+                    throw new \Exception(sprintf(
+                        'Import header doesn\'t match import template at position "%s". Should be "%s" but is "%s".',
+                        $coordinate,
+                        $template[$rowIndex][$columnIndex],
+                        $content[$rowIndex][$columnIndex]
+                    ));
                 }
             }
         }
