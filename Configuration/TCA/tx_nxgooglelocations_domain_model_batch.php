@@ -21,7 +21,10 @@ $value = [
         'enablecolumns' => [
         ],
         'searchFields' => 'file_name',
-        'iconfile' => $iconsPath . 'Batch.png'
+        'typeicon_column' => 'type',
+        'typeicon_classes' => [
+            'default' => 'ext-nxgooglelocations-batch-type-default',
+        ],
     ],
     'interface' => [
         'showRecordFieldList' => '',
