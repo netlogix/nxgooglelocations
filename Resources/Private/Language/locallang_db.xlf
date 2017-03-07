@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" datatype="plaintext" original="messages" date="2017-02-22T13:29:00Z" product-name="nxgooglelocations">
+        <header/>
+        <body>
+
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch">
+                <source xml:lang="en">Import Task</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.type">
+                <source xml:lang="en">Task Type</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.tstamp">
+                <source xml:lang="en">Last Updated</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.state">
+                <source xml:lang="en">Current State</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.state.I.new">
+                <source xml:lang="en">New</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.state.I.validating">
+                <source xml:lang="en">File format validation</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.state.I.running">
+                <source xml:lang="en">Fetching latitude/longitude from google</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.state.I.persisting">
+                <source xml:lang="en">Persisting records</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.state.I.closed">
+                <source xml:lang="en">Closed</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.delete_unused">
+                <source xml:lang="en">Delete unused</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.amount">
+                <source xml:lang="en">Total locations</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.geocoding_requests">
+                <source xml:lang="en">Google requests</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.position">
+                <source xml:lang="en">Processed locations</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.api_key">
+                <source xml:lang="en">Google Maps API Key</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.storage_page_id">
+                <source xml:lang="en">Storage Page</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.backend_user_id">
+                <source xml:lang="en">Backend User</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.file_name">
+                <source xml:lang="en">File Name</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.file_content">
+                <source xml:lang="en">File Content</source>
+            </trans-unit>
+            <trans-unit id="tx_nxgooglelocations_domain_model_batch.file_hash">
+                <source xml:lang="en">File Hash</source>
+            </trans-unit>
+
+        </body>
+    </file>
+</xliff>
