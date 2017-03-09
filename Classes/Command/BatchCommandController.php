@@ -41,6 +41,7 @@ class BatchCommandController extends CommandController
             return;
         }
 
+        $GLOBALS['TYPO3_DB']->sql_query('SET SESSION wait_timeout = 3600;');
         $batch->run(function($batch, $amount, $position, $state) use ($batchRepository, $persistenceManager) {
             $batchRepository->update($batch);
             $persistenceManager->persistAll();
