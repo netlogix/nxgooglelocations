@@ -5,6 +5,7 @@ use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use PHPExcel_Cell;
 use PHPExcel_IOFactory;
+use PHPExcel_Reader_Abstract;
 use PHPExcel_Worksheet;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -56,12 +57,12 @@ abstract class LocationFactory
 
     public function reset()
     {
-        $this->templateSheet = PHPExcel_IOFactory::load(GeneralUtility::getFileAbsFileName($this->templateFileName))->getActiveSheet();
+        $this->templateSheet = $this->getActiveSheetOfFile($this->templateFileName);
     }
 
     public function load($fileName)
     {
-        $this->contentSheet = PHPExcel_IOFactory::load(GeneralUtility::getFileAbsFileName($fileName))->getActiveSheet();
+        $this->contentSheet = $this->getActiveSheetOfFile($fileName);
     }
 
     /**
@@ -168,5 +169,19 @@ abstract class LocationFactory
     protected function getDataRange()
     {
         return sprintf('A%d:%s%d', $this->templateSheet->getHighestRow() + 1, $this->contentSheet->getHighestColumn(), $this->contentSheet->getHighestRow());
+    }
+
+    /**
+     * @param string $fileName
+     * @return PHPExcel_Worksheet
+     */
+    protected function getActiveSheetOfFile($fileName)
+    {
+        $fileName = GeneralUtility::getFileAbsFileName($fileName);
+        $reader = PHPExcel_IOFactory::createReaderForFile($fileName);
+        if ($reader instanceof PHPExcel_Reader_Abstract) {
+            $reader->setReadDataOnly(true);
+        }
+        return $reader->load($fileName)->getActiveSheet();
     }
 }
