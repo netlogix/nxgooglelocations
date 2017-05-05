@@ -31,7 +31,7 @@ abstract class GeoCoder
      *
      * @var int
      */
-    protected $probabilityThreshold= 1;
+    protected $probabilityThreshold = 1;
 
     /**
      * @var string
@@ -60,6 +60,16 @@ abstract class GeoCoder
     public function needsToBeGeoCoded(array $tcaRecord)
     {
         return (!$tcaRecord[$this->fieldMap->latitude] && !$tcaRecord[$this->fieldMap->longitude]) || ($tcaRecord[$this->fieldMap->probability] > $this->probabilityThreshold);
+    }
+
+    /**
+     * @param array $tcaRecord
+     * @return array
+     */
+    public function setProbabilityToManually(array $tcaRecord)
+    {
+        $tcaRecord[$this->fieldMap->probability] = CodingResult::PROBABILITY_MANUALLY_IMPORT;
+        return $tcaRecord;
     }
 
     /**
