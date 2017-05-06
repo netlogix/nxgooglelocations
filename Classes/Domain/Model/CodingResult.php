@@ -19,6 +19,10 @@ use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
  */
 class CodingResult
 {
+    const PROBABILITY_ZERO_RESULTS = -1;
+    const PROBABILITY_MANUALLY_IMPORT = -255;
+    const PROBABILITY_MANUALLY_EDITOR = -256;
+
     protected $minProbability = 0;
     protected $maxProbability = 10;
 
@@ -47,7 +51,7 @@ class CodingResult
                 return ['latitude' => $this->latitude, 'longitude' => $this->longitude];
             case 'probability':
                 if ($this->status === GeoCoder::STATUS_ZERO_RESULTS) {
-                    return -1;
+                    return self::PROBABILITY_ZERO_RESULTS;
                 } else {
                     return max(
                         $this->minProbability,

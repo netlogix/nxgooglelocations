@@ -234,6 +234,10 @@ class Batch extends AbstractEntity
     protected function mapTcaRecord($tcaRecord)
     {
         $tcaRecord = $this->getImporter()->writeExistingIdentifierToTcaRecord($this->getLocationFactory()->getRecordTableName(), $tcaRecord);
+        if (!$this->getGeoCoder()->needsToBeGeoCoded($tcaRecord)) {
+            $tcaRecord = $this->getGeoCoder()->setProbabilityToManually($tcaRecord);
+        }
+
         $existingRecord = (array)$this->getImporter()->getExistingRecord($this->getLocationFactory()->getRecordTableName(), $this->storagePageId, $tcaRecord);
 
         if ($this->getGeoCoder()->needsToBeGeoCoded($tcaRecord)
