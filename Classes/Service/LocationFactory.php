@@ -4,10 +4,13 @@ namespace Netlogix\Nxgooglelocations\Service;
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use PHPExcel_Cell;
+use PHPExcel_Exception;
 use PHPExcel_IOFactory;
 use PHPExcel_Reader_Abstract;
+use PHPExcel_Reader_Exception;
 use PHPExcel_Worksheet;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Property\Exception\InvalidPropertyException;
 
 abstract class LocationFactory
 {
@@ -49,17 +52,30 @@ abstract class LocationFactory
      */
     protected $contentSheet;
 
+    /**
+     * @throws PHPExcel_Exception
+     * @throws PHPExcel_Reader_Exception
+     */
     public function __construct()
     {
         $this->fieldMap = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class)->get($this->fieldMapClassName);
         $this->reset();
     }
 
+    /**
+     * @throws PHPExcel_Exception
+     * @throws PHPExcel_Reader_Exception
+     */
     public function reset()
     {
         $this->templateSheet = $this->getActiveSheetOfFile($this->templateFileName);
     }
 
+    /**
+     * @param $fileName
+     * @throws PHPExcel_Exception
+     * @throws PHPExcel_Reader_Exception
+     */
     public function load($fileName)
     {
         $this->contentSheet = $this->getActiveSheetOfFile($fileName);
@@ -138,10 +154,11 @@ abstract class LocationFactory
 
     /**
      * @param array $tcaRecord
-     * @param CodingResult $codingResult
+     * @param CodingResult|null $codingResult
      * @return array
+     * @throws InvalidPropertyException
      */
-    public function writeCoordinatesToTcaRecord($tcaRecord, $codingResult = null)
+    public function writeCoordinatesToTcaRecord(array $tcaRecord, CodingResult $codingResult = null)
     {
         $map = ['rawData', 'addressResultFromGeocoding', 'latitude', 'longitude', 'position', 'probability'];
         foreach ($map as $fieldName) {
@@ -174,6 +191,8 @@ abstract class LocationFactory
     /**
      * @param string $fileName
      * @return PHPExcel_Worksheet
+     * @throws PHPExcel_Exception
+     * @throws PHPExcel_Reader_Exception
      */
     protected function getActiveSheetOfFile($fileName)
     {
