@@ -1,4 +1,5 @@
 <?php
+
 namespace Netlogix\Nxgooglelocations\ViewHelpers;
 
 use TYPO3\CMS\Core\SingletonInterface;
@@ -6,6 +7,8 @@ use TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 class RecordTableViewHelper extends AbstractViewHelper implements SingletonInterface
 {
+    protected $escapeOutput = false;
+
     /**
      * @param string $recordTableName
      * @param int $storagePageId
