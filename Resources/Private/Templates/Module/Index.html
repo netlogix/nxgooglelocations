@@ -1,0 +1,132 @@
+{namespace nxgl=Netlogix\Nxgooglelocations\ViewHelpers}
+
+<f:layout name="Backend"/>
+
+<f:section name="content">
+
+
+	<h1>
+		<f:translate key="module.title" extensionName="{localLangExtensionName}"/>
+	</h1>
+
+
+	<h2>
+		<f:translate key="module.import" extensionName="{localLangExtensionName}"/>
+	</h2>
+
+
+	<f:form action="import" enctype="multipart/form-data">
+		<table class="table table-striped table-hover dataTable no-footer" role="grid">
+			<tr role="row" class="odd">
+				<td>
+					<f:translate key="module.import.pick-a-file" extensionName="{localLangExtensionName}"/>
+				</td>
+				<td>
+					<f:form.upload name="file" additionalAttributes="{accept: '.xlsx', required: true}" class="form-control"/>
+				</td>
+			</tr>
+
+			<f:if condition="{allowedCountries}">
+				<f:then>
+					<tr role="row" class="even">
+						<td>
+							<f:translate key="module.import.pick-a-country" extensionName="{localLangExtensionName}"/>
+						</td>
+						<td>
+							<f:form.select name="country" options="{allowedCountries}" optionLabelField="shortNameEn" class="form-control"/>
+						</td>
+					</tr>
+				</f:then>
+				<f:else>
+					<tr role="row" class="even">
+						<td colspan="2">
+							<f:translate key="module.import.no-specific-country" extensionName="{localLangExtensionName}"/>
+					</tr>
+				</f:else>
+			</f:if>
+
+			<tr role="row" class="odd">
+				<td>
+					<f:translate key="module.import.delete-unused" extensionName="{localLangExtensionName}"/>
+				</td>
+				<td>
+					<f:form.checkbox name="deleteUnused" value="deleteUnused" checked="true" class="form-control"/>
+				</td>
+			</tr>
+
+			<tr role="row" class="odd">
+				<td>
+					<f:translate key="module.import.cancel-previous" extensionName="{localLangExtensionName}"/>
+				</td>
+				<td>
+					<f:form.checkbox name="cancelPrevious" value="cancelPrevious" checked="true" class="form-control"/>
+				</td>
+			</tr>
+
+		</table>
+		<button class="btn btn-default btn-save">
+			<f:translate key="module.import.submit-button" extensionName="{localLangExtensionName}"/>
+		</button>
+	</f:form>
+
+
+	<h2>
+		<f:translate key="module.export" extensionName="{localLangExtensionName}"/>
+	</h2>
+
+	<f:form action="export">
+		<button class="btn btn-default btn-save">
+			<f:translate key="module.export.submit-button" extensionName="{localLangExtensionName}"/>
+		</button>
+	</f:form>
+
+
+	<h2>
+		<f:translate key="module.batches" extensionName="{localLangExtensionName}"/>
+	</h2>
+
+
+	<nxgl:be.tableList tableName="{batches.tableName}" storagePid="{id}" readOnly="1" fieldList="{batches.fieldList}">
+		<div class="alert alert-info">
+			<div class="media">
+				<div class="media-left">
+							<span class="fa-stack fa-lg">
+								<i class="fa fa-circle fa-stack-2x"></i>
+								<i class="fa fa-info fa-stack-1x"></i>
+							</span>
+				</div>
+				<div class="media-body">
+					<div class="alert-message">
+						<f:translate key="module.batches.error-if-no-record" extensionName="{localLangExtensionName}"/>
+					</div>
+				</div>
+			</div>
+		</div>
+	</nxgl:be.tableList>
+
+
+	<h2>
+		<f:translate key="module.dealers" extensionName="{localLangExtensionName}"/>
+	</h2>
+
+
+	<nxgl:be.tableList tableName="{locations.tableName}" storagePid="{id}" readOnly="1" fieldList="{locations.fieldList}">
+		<div class="alert alert-info">
+			<div class="media">
+				<div class="media-left">
+							<span class="fa-stack fa-lg">
+								<i class="fa fa-circle fa-stack-2x"></i>
+								<i class="fa fa-info fa-stack-1x"></i>
+							</span>
+				</div>
+				<div class="media-body">
+					<div class="alert-message">
+						<f:translate key="module.dealers.error-if-no-record" extensionName="{localLangExtensionName}"/>
+					</div>
+				</div>
+			</div>
+		</div>
+	</nxgl:be.tableList>
+
+
+</f:section>
