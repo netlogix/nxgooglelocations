@@ -60,9 +60,13 @@ abstract class ModuleController extends AbstractBackendModuleController
             $this->forwardToErrorWithCannedMessage('missing-countries');
         }
 
-        if (strtoupper(join('', $allowedCountryCodes)) !== 'ALL') {
+        if (strtoupper(join('', $allowedCountryCodes)) === 'ALL') {
+            $this->view->assign('allowedCountries', $this->countryRepository->findAll());
+        } else {
             $this->view->assign('allowedCountries', $this->countryRepository->findAllowedByIsoCodeA3(join(',', $allowedCountryCodes)));
         }
+
+
         $this->view->assign('id', $id);
         $this->view->assign('localLangExtensionName', $this->getExtensionNameForLocalLang());
         $this->view->assign('batches', [

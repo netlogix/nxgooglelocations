@@ -7,8 +7,14 @@ module.tx_nxuvexdealerlocator {
 	}
 
 	settings {
+
+		# The google maps API. Gets used by CURL, so make sure no referrer restriction is in place.
 		apiKey =
+
+		# A comma separated list of ISO3 codes of countries. Alternatively use "ALL" to allow all countries.
 		allowedCountries =
+
+		# Use this to enable or disable the module based on PIDinRootline
 		enabled =
 	}
 
