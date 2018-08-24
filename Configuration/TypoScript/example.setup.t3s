@@ -1,0 +1,15 @@
+module.tx_nxuvexdealerlocator {
+
+	view {
+		templateRootPaths.10 = EXT:nxgooglelocations/Resources/Private/Templates/
+		partialRootPaths.10 = EXT:nxgooglelocations/Resources/Private/Partials/
+		layoutRootPaths.10 = EXT:nxgooglelocations/Resources/Private/Layouts/
+	}
+
+	settings {
+		apiKey =
+		allowedCountries =
+		enabled =
+	}
+
+}
