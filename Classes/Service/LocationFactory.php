@@ -1,19 +1,19 @@
 <?php
+
 namespace Netlogix\Nxgooglelocations\Service;
 
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use PHPExcel_Cell;
 use PHPExcel_Exception;
-use PHPExcel_IOFactory;
-use PHPExcel_Reader_Abstract;
 use PHPExcel_Reader_Exception;
-use PHPExcel_Worksheet;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Property\Exception\InvalidPropertyException;
 
 abstract class LocationFactory
 {
+    use ExcelServiceTrait;
+
     protected $templateFileName = '/dev/null';
 
     /**
@@ -34,23 +34,7 @@ abstract class LocationFactory
     /**
      * @var array<string>
      */
-    protected $columnNameMap = [
-        'A' => 'title',
-        'B' => 'address',
-        'C' => 'alterantive_address',
-        'D' => 'latitude',
-        'E' => 'longitude',
-    ];
-
-    /**
-     * @var PHPExcel_Worksheet
-     */
-    protected $templateSheet;
-
-    /**
-     * @var PHPExcel_Worksheet
-     */
-    protected $contentSheet;
+    protected $columnNameMap = [];
 
     /**
      * @throws PHPExcel_Exception
@@ -59,26 +43,7 @@ abstract class LocationFactory
     public function __construct()
     {
         $this->fieldMap = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class)->get($this->fieldMapClassName);
-        $this->reset();
-    }
-
-    /**
-     * @throws PHPExcel_Exception
-     * @throws PHPExcel_Reader_Exception
-     */
-    public function reset()
-    {
-        $this->templateSheet = $this->getActiveSheetOfFile($this->templateFileName);
-    }
-
-    /**
-     * @param $fileName
-     * @throws PHPExcel_Exception
-     * @throws PHPExcel_Reader_Exception
-     */
-    public function load($fileName)
-    {
-        $this->contentSheet = $this->getActiveSheetOfFile($fileName);
+        $this->resetTemplateSheet($this->templateFileName);
     }
 
     /**
@@ -186,21 +151,5 @@ abstract class LocationFactory
     protected function getDataRange()
     {
         return sprintf('A%d:%s%d', $this->templateSheet->getHighestRow() + 1, $this->contentSheet->getHighestColumn(), $this->contentSheet->getHighestRow());
-    }
-
-    /**
-     * @param string $fileName
-     * @return PHPExcel_Worksheet
-     * @throws PHPExcel_Exception
-     * @throws PHPExcel_Reader_Exception
-     */
-    protected function getActiveSheetOfFile($fileName)
-    {
-        $fileName = GeneralUtility::getFileAbsFileName($fileName);
-        $reader = PHPExcel_IOFactory::createReaderForFile($fileName);
-        if ($reader instanceof PHPExcel_Reader_Abstract) {
-            $reader->setReadDataOnly(true);
-        }
-        return $reader->load($fileName)->getActiveSheet();
     }
 }
