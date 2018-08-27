@@ -1,0 +1,27 @@
+module.tx_nxuvexdealerlocator {
+
+	view {
+		templateRootPaths.10 = EXT:nxgooglelocations/Resources/Private/Templates/
+		partialRootPaths.10 = EXT:nxgooglelocations/Resources/Private/Partials/
+		layoutRootPaths.10 = EXT:nxgooglelocations/Resources/Private/Layouts/
+	}
+
+	settings {
+
+		# The google maps API. Gets used by CURL, so make sure no referrer restriction is in place.
+		apiKey =
+
+		# A comma separated list of ISO3 codes of countries. Alternatively use "ALL" to allow all countries.
+		allowedCountries =
+
+		# Use this to enable or disable the module based on PIDinRootline
+		enabled =
+
+		# Enable or disable the "import" feature
+		disableImport =
+
+		# Enable or disable the "export" feature
+		disableExport =
+	}
+
+}

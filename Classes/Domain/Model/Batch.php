@@ -1,10 +1,13 @@
 <?php
 namespace Netlogix\Nxgooglelocations\Domain\Model;
 
+use Exception;
 use Netlogix\Nxgooglelocations\Service\BackendUserImpersonator;
 use Netlogix\Nxgooglelocations\Service\GeoCoder;
 use Netlogix\Nxgooglelocations\Service\Importer;
 use Netlogix\Nxgooglelocations\Service\LocationFactory;
+use PHPExcel_Exception;
+use PHPExcel_Reader_Exception;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
@@ -141,6 +144,11 @@ class Batch extends AbstractEntity
         return $this->fileName;
     }
 
+    /**
+     * @param callable|null $callback
+     * @throws PHPExcel_Exception
+     * @throws PHPExcel_Reader_Exception
+     */
     public function run(callable $callback = null)
     {
         $this->callback = $callback;
@@ -154,6 +162,11 @@ class Batch extends AbstractEntity
         $this->callback = null;
     }
 
+    /**
+     * @throws PHPExcel_Exception
+     * @throws PHPExcel_Reader_Exception
+     * @throws Exception
+     */
     public function validate()
     {
         $filePath = $this->getTemporaryFilePath();
@@ -253,7 +266,7 @@ class Batch extends AbstractEntity
                 $geoCodingAddress = $this->getGeoCoder()->getGeoCodingAddress($tcaRecord);
                 $codingResult = $this->getGeoCoder()->fetchCoordinatesForAddress($geoCodingAddress);
                 $tcaRecord = $this->getLocationFactory()->writeCoordinatesToTcaRecord($tcaRecord, $codingResult);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
 
             }
         }

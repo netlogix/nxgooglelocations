@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" datatype="plaintext" original="messages" date="2017-02-22T15:02:00Z" product-name="nxgooglelocations">
+        <header/>
+        <body>
+
+            <trans-unit id="module.title">
+                <source xml:lang="en">Import Locations</source>
+            </trans-unit>
+
+            <trans-unit id="module.import">
+                <source xml:lang="en">Upload new locations</source>
+            </trans-unit>
+            <trans-unit id="module.import.pick-a-file">
+                <source xml:lang="en">Pick a file</source>
+            </trans-unit>
+            <trans-unit id="module.import.pick-a-country">
+                <source xml:lang="en">Assign all to this country</source>
+            </trans-unit>
+            <trans-unit id="module.import.no-specific-country">
+                <source xml:lang="en">Assign all to no specific country</source>
+            </trans-unit>
+            <trans-unit id="module.import.delete-unused">
+                <source xml:lang="en">Remove locations no longer existing in new import file</source>
+            </trans-unit>
+            <trans-unit id="module.import.cancel-previous">
+                <source xml:lang="en">Cancel previous jobs (only works for jobs in "Current State: New")</source>
+            </trans-unit>
+            <trans-unit id="module.import.submit-button">
+                <source xml:lang="en">Schedule import task</source>
+            </trans-unit>
+
+            <trans-unit id="module.export">
+                <source xml:lang="en">Export Locations</source>
+            </trans-unit>
+            <trans-unit id="module.export.submit-button">
+                <source xml:lang="en">Download locations list</source>
+            </trans-unit>
+
+            <trans-unit id="module.batches">
+                <source xml:lang="en">Import tasks</source>
+            </trans-unit>
+            <trans-unit id="module.batches.error-if-no-record">
+                <source xml:lang="en">There are no import tasks on this page.</source>
+            </trans-unit>
+
+            <trans-unit id="module.dealers">
+                <source xml:lang="en">Currently imported locations</source>
+            </trans-unit>
+            <trans-unit id="module.dealers.error-if-no-record">
+                <source xml:lang="en">There are no location records on this page.</source>
+            </trans-unit>
+
+            <trans-unit id="module.flash-messages.disabled.title">
+                <source xml:lang="en">Importing not enabled</source>
+            </trans-unit>
+            <trans-unit id="module.flash-messages.disabled.content">
+                <source xml:lang="en">Importing locations is not enabled here. Please select a proper target folder.</source>
+            </trans-unit>
+
+            <trans-unit id="module.flash-messages.missing-api-key.title">
+                <source xml:lang="en">No API key available</source>
+            </trans-unit>
+            <trans-unit id="module.flash-messages.missing-api-key.content">
+                <source xml:lang="en">This folder is not configured for location imports, the Google Maps API key is missing.</source>
+            </trans-unit>
+
+            <trans-unit id="module.flash-messages.missing-countries.title">
+                <source xml:lang="en">No countries available</source>
+            </trans-unit>
+            <trans-unit id="module.flash-messages.missing-countries.content">
+                <source xml:lang="en">This folder is not configured for location imports, country configuration is missing.</source>
+            </trans-unit>
+
+            <trans-unit id="module.flash-messages.job-canceled.content">
+                <source xml:lang="en">Job "%s" has been canceled.</source>
+            </trans-unit>
+
+            <trans-unit id="module.flash-messages.new-job-scheduled.content">
+                <source xml:lang="en">A new import job has been scheduled.</source>
+            </trans-unit>
+
+        </body>
+    </file>
+</xliff>

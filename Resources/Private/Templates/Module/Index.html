@@ -1,0 +1,27 @@
+<f:layout name="Backend"/>
+
+<f:section name="content">
+
+
+	<h1>
+		<f:translate key="module.title" extensionName="{localLangExtensionName}"/>
+	</h1>
+
+
+	<f:if condition="{enableImport}">
+		<f:render partial="Import" arguments="{_all}"/>
+	</f:if>
+
+
+	<f:if condition="{enableExport}">
+		<f:render partial="Export" arguments="{_all}"/>
+	</f:if>
+
+
+	<f:render partial="BatchesTable" arguments="{_all}"/>
+
+
+	<f:render partial="LocationsTable" arguments="{_all}"/>
+
+
+</f:section>

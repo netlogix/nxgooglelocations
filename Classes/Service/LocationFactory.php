@@ -1,16 +1,19 @@
 <?php
+
 namespace Netlogix\Nxgooglelocations\Service;
 
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use PHPExcel_Cell;
-use PHPExcel_IOFactory;
-use PHPExcel_Reader_Abstract;
-use PHPExcel_Worksheet;
+use PHPExcel_Exception;
+use PHPExcel_Reader_Exception;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Property\Exception\InvalidPropertyException;
 
 abstract class LocationFactory
 {
+    use ExcelServiceTrait;
+
     protected $templateFileName = '/dev/null';
 
     /**
@@ -31,38 +34,16 @@ abstract class LocationFactory
     /**
      * @var array<string>
      */
-    protected $columnNameMap = [
-        'A' => 'title',
-        'B' => 'address',
-        'C' => 'alterantive_address',
-        'D' => 'latitude',
-        'E' => 'longitude',
-    ];
+    protected $columnNameMap = [];
 
     /**
-     * @var PHPExcel_Worksheet
+     * @throws PHPExcel_Exception
+     * @throws PHPExcel_Reader_Exception
      */
-    protected $templateSheet;
-
-    /**
-     * @var PHPExcel_Worksheet
-     */
-    protected $contentSheet;
-
     public function __construct()
     {
         $this->fieldMap = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class)->get($this->fieldMapClassName);
-        $this->reset();
-    }
-
-    public function reset()
-    {
-        $this->templateSheet = $this->getActiveSheetOfFile($this->templateFileName);
-    }
-
-    public function load($fileName)
-    {
-        $this->contentSheet = $this->getActiveSheetOfFile($fileName);
+        $this->resetTemplateSheet($this->templateFileName);
     }
 
     /**
@@ -138,10 +119,11 @@ abstract class LocationFactory
 
     /**
      * @param array $tcaRecord
-     * @param CodingResult $codingResult
+     * @param CodingResult|null $codingResult
      * @return array
+     * @throws InvalidPropertyException
      */
-    public function writeCoordinatesToTcaRecord($tcaRecord, $codingResult = null)
+    public function writeCoordinatesToTcaRecord(array $tcaRecord, CodingResult $codingResult = null)
     {
         $map = ['rawData', 'addressResultFromGeocoding', 'latitude', 'longitude', 'position', 'probability'];
         foreach ($map as $fieldName) {
@@ -169,19 +151,5 @@ abstract class LocationFactory
     protected function getDataRange()
     {
         return sprintf('A%d:%s%d', $this->templateSheet->getHighestRow() + 1, $this->contentSheet->getHighestColumn(), $this->contentSheet->getHighestRow());
-    }
-
-    /**
-     * @param string $fileName
-     * @return PHPExcel_Worksheet
-     */
-    protected function getActiveSheetOfFile($fileName)
-    {
-        $fileName = GeneralUtility::getFileAbsFileName($fileName);
-        $reader = PHPExcel_IOFactory::createReaderForFile($fileName);
-        if ($reader instanceof PHPExcel_Reader_Abstract) {
-            $reader->setReadDataOnly(true);
-        }
-        return $reader->load($fileName)->getActiveSheet();
     }
 }

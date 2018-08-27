@@ -1,4 +1,5 @@
 <?php
+
 namespace Netlogix\Nxgooglelocations\Domain\Repository;
 
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
@@ -6,6 +7,9 @@ use TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
+/**
+ * @method null|Batch findOneByState(string $state)
+ */
 class BatchRepository extends Repository
 {
     public function initializeObject()
