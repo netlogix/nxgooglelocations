@@ -82,6 +82,9 @@ abstract class ModuleController extends AbstractBackendModuleController
         $this->view->assign('locations', [
             'tableName' => $this->getTableNameForLocationRecords(),
         ]);
+
+        $this->view->assign('enableImport', $this->isImportEnabled());
+        $this->view->assign('enableExport', $this->isExportEnabled());
     }
 
     /**
@@ -171,4 +174,14 @@ abstract class ModuleController extends AbstractBackendModuleController
     abstract protected function getTableNameForLocationRecords();
 
     abstract protected function mapRequestToBatch($id, array $file, $deleteUnused, $cancelPrevious, Country $country = null): Batch;
+
+    protected function isImportEnabled()
+    {
+        return empty($this->settings['disableImport']);
+    }
+
+    protected function isExportEnabled()
+    {
+        return empty($this->settings['disableExport']);
+    }
 }
