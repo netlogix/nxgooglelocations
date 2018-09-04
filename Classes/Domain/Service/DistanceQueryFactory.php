@@ -62,7 +62,7 @@ MySQL;
 
 		$query = $this->getConnectionPool()->getQueryBuilderForTable($this->tableName);
 		$query
-			->select('*')
+			->select(sprintf('%s.*', $this->tableName))
 			->from($this->tableName)
 			->orderBy($distanceAs);
 		QueryBuilder::addUnquotedSelect($query, $this->getDistanceQueryAttribute($latitude, $longitude, $cleanedDistanceFactor, $distanceAs));
