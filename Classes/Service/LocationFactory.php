@@ -147,7 +147,7 @@ abstract class LocationFactory
      */
     protected function getDataRange()
     {
-        $firstContentRow = max(... array_keys($this->getHeaderRowsFromTemplate())) + 1;
+        $firstContentRow = max(... array_keys($this->getHeaderRowsFromTemplate())) + 2;
         return sprintf('A%d:%s%d', $firstContentRow, $this->contentSheet->getHighestColumn(), $this->contentSheet->getHighestRow());
     }
 
