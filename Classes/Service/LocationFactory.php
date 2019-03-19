@@ -51,13 +51,10 @@ abstract class LocationFactory
      */
     public function compareHeaderRows()
     {
-        $template = $this->templateSheet->toArray();
+        $template = $this->getHeaderRowsFromTemplate();
         $content = $this->contentSheet->toArray();
 
         foreach ($template as $rowIndex => $rowData) {
-            if (!self::containsData($rowData)) {
-                continue;
-            }
             foreach ($rowData as $columnIndex => $cellContent) {
                 $coordinate = PHPExcel_Cell::stringFromColumnIndex($columnIndex) . ($rowIndex + 1);
                 if ($template[$rowIndex][$columnIndex] != $content[$rowIndex][$columnIndex]) {
@@ -150,6 +147,22 @@ abstract class LocationFactory
      */
     protected function getDataRange()
     {
-        return sprintf('A%d:%s%d', $this->templateSheet->getHighestRow() + 1, $this->contentSheet->getHighestColumn(), $this->contentSheet->getHighestRow());
+        $firstContentRow = max(... array_keys($this->getHeaderRowsFromTemplate())) + 1;
+        return sprintf('A%d:%s%d', $firstContentRow, $this->contentSheet->getHighestColumn(), $this->contentSheet->getHighestRow());
+    }
+
+    /**
+     * The Sheet::getHighestRow() consumes excel meta data. If there's an empty line
+     * that has been touched in any way before, e.g. by placing the cursor in it before
+     * saving, this line gets countet as well.
+     * This function actually counts non-empty lines.
+     *
+     * @return array
+     */
+    protected function getHeaderRowsFromTemplate()
+    {
+        return array_filter($this->templateSheet->toArray(), function(array $rowData) {
+            return self::containsData($rowData);
+        });
     }
 }
