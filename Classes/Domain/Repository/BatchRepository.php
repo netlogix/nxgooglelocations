@@ -22,7 +22,7 @@ class BatchRepository extends Repository
 
     /**
      * @param int $storagePageId
-     * @return array|QueryResultInterface
+     * @return QueryResultInterface<Batch>
      */
     public function findOpenInFolder($storagePageId)
     {
