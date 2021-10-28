@@ -2,7 +2,7 @@
 namespace Netlogix\Nxgooglelocations\Domain\Model;
 
 use Netlogix\Nxgooglelocations\Service\GeoCoder;
-use TYPO3\CMS\Extbase\Property\Exception\InvalidPropertyException;
+use TYPO3\CMS\Extbase\Property\Exception\InvalidSourceException;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
 /**
@@ -62,6 +62,6 @@ class CodingResult
                     );
                 }
         }
-        throw new InvalidPropertyException('There is no property "' . $propertyName . '" in CodingResults.');
+        throw new InvalidSourceException('There is no property "' . $propertyName . '" in CodingResults.');
     }
 }

@@ -10,8 +10,8 @@ class BatchRepository extends Repository
 {
     public function initializeObject()
     {
-        /** @var QuerySettingsInterface $defaultQuerySettings */
         $defaultQuerySettings = $this->objectManager->get(QuerySettingsInterface::class);
+        assert($defaultQuerySettings instanceof QuerySettingsInterface);
         $defaultQuerySettings->setRespectStoragePage(false);
         $this->setDefaultQuerySettings($defaultQuerySettings);
     }
