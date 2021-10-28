@@ -3,6 +3,7 @@ namespace Netlogix\Nxgooglelocations\Service;
 
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\DatabaseConnection;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -30,7 +31,7 @@ abstract class Importer
     public function __construct($storagePageId)
     {
         $this->storagePageId = $storagePageId;
-        $this->fieldMap = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class)->get($this->fieldMapClassName);
+        $this->fieldMap = GeneralUtility::makeInstance($this->fieldMapClassName);
     }
 
     /**
@@ -76,8 +77,13 @@ abstract class Importer
             return (int)$recordUid;
         }, $recordUids));
 
+
+        $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
+        $connection = $connectionPool->getConnectionForTable($recordTableName);
+
         /** @var DatabaseConnection $database */
         $database = $GLOBALS['TYPO3_DB'];
+        assert($database instanceof DatabaseConnection);
         $database->sql_query('SET group_concat_max_len = 32768');
         $delinquens = GeneralUtility::intExplode(
             ',',

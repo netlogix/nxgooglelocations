@@ -1,4 +1,5 @@
 <?php
+
 namespace Netlogix\Nxgooglelocations\Domain\Model;
 
 use Exception;
@@ -9,6 +10,7 @@ use Netlogix\Nxgooglelocations\Service\LocationFactory;
 use PHPExcel_Exception;
 use PHPExcel_Reader_Exception;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Annotation\ORM as TYPO3;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 
@@ -57,31 +59,31 @@ class Batch extends AbstractEntity
 
     /**
      * @var BackendUserImpersonator
-     * @transient
+     * @TYPO3\Transient
      */
     protected $impersonator;
 
     /**
      * @var GeoCoder
-     * @transient
+     * @TYPO3\Transient
      */
     protected $geoCoder;
 
     /**
      * @var Importer
-     * @transient
+     * @TYPO3\Transient
      */
     protected $importer;
 
     /**
      * @var LocationFactory
-     * @transient
+     * @TYPO3\Transient
      */
     protected $locationFactory;
 
     /**
      * @var callable
-     * @transient
+     * @TYPO3\Transient
      */
     protected $callback;
 
@@ -112,7 +114,7 @@ class Batch extends AbstractEntity
 
     /**
      * @var array<string>
-     * @transient
+     * @TYPO3\Transient
      */
     protected $serviceClasses = [
         GeoCoder::class => GeoCoder::class,
@@ -128,8 +130,14 @@ class Batch extends AbstractEntity
      * @param string $fileName
      * @param bool $deleteUnused
      */
-    public function __construct($apiKey, $storagePageId, $backendUserId, $filePath, $fileName = '', $deleteUnused = true)
-    {
+    public function __construct(
+        $apiKey,
+        $storagePageId,
+        $backendUserId,
+        $filePath,
+        $fileName = '',
+        $deleteUnused = true
+    ) {
         $this->apiKey = $apiKey;
         $this->storagePageId = $storagePageId;
         $this->backendUserId = $backendUserId;
@@ -170,9 +178,9 @@ class Batch extends AbstractEntity
     public function validate()
     {
         $filePath = $this->getTemporaryFilePath();
-        $this->getLocationFactory()->load($filePath);
+        $factory->load($filePath);
         unlink($filePath);
-        $this->getLocationFactory()->compareHeaderRows();
+        $factory->compareHeaderRows();
     }
 
     public function cancle()
@@ -206,14 +214,15 @@ class Batch extends AbstractEntity
 
     protected function getTemporaryFilePath()
     {
-        $filePath = sprintf(PATH_site . 'typo3temp/locations/l-%s-%s.%s', $this->fileHash, getmypid(), pathinfo($this->fileName, PATHINFO_EXTENSION));
+        $filePath = sprintf(PATH_site . 'typo3temp/locations/l-%s-%s.%s', $this->fileHash, getmypid(),
+            pathinfo($this->fileName, PATHINFO_EXTENSION));
         GeneralUtility::writeFileToTypo3tempDir($filePath, base64_decode($this->fileContent));
         return $filePath;
     }
 
     protected function collectTcaRecords()
     {
-        $tcaRecords = $this->getLocationFactory()->getRecordsForValidRows();
+        $tcaRecords = $factory->getRecordsForValidRows();
         $this->setAmountAndResetPosition(count($tcaRecords));
 
         $position = 0;
@@ -232,12 +241,13 @@ class Batch extends AbstractEntity
         $importer = $this->getImporter();
         $locationFactory = $this->getLocationFactory();
         $deleteUnused = $this->deleteUnused;
-        $this->impersonator->runAsBackendUser($backendUserId, function () use ($importer, $locationFactory, $tcaRecords, $storagePageId, $deleteUnused) {
-            $recordUids = $importer->import($locationFactory->getRecordTableName(), $storagePageId, $tcaRecords);
-            if ($deleteUnused) {
-                $importer->removeRecordsExcept($locationFactory->getRecordTableName(), $storagePageId, $recordUids);
-            }
-        });
+        $this->impersonator->runAsBackendUser($backendUserId,
+            function () use ($importer, $locationFactory, $tcaRecords, $storagePageId, $deleteUnused) {
+                $recordUids = $importer->import($locationFactory->getRecordTableName(), $storagePageId, $tcaRecords);
+                if ($deleteUnused) {
+                    $importer->removeRecordsExcept($locationFactory->getRecordTableName(), $storagePageId, $recordUids);
+                }
+            });
     }
 
     /**
@@ -246,27 +256,41 @@ class Batch extends AbstractEntity
      */
     protected function mapTcaRecord($tcaRecord)
     {
-        $tcaRecord = $this->getImporter()->writeExistingIdentifierToTcaRecord($this->getLocationFactory()->getRecordTableName(), $tcaRecord);
-        if (!$this->getGeoCoder()->needsToBeGeoCoded($tcaRecord)) {
-            $tcaRecord = $this->getGeoCoder()->setProbabilityToManually($tcaRecord);
+        $importer = $this->getImporter();
+        $factory = $this->getLocationFactory();
+        $coder = $this->getGeoCoder();
+
+        $tcaRecord = $importer->writeExistingIdentifierToTcaRecord(
+            $factory->getRecordTableName(),
+            $tcaRecord
+        );
+        if (!$coder->needsToBeGeoCoded($tcaRecord)) {
+            $tcaRecord = $coder->setProbabilityToManually($tcaRecord);
         }
 
-        $existingRecord = (array)$this->getImporter()->getExistingRecord($this->getLocationFactory()->getRecordTableName(), $this->storagePageId, $tcaRecord);
+        $existingRecord = (array)$importer->getExistingRecord(
+            $factory->getRecordTableName(),
+            $this->storagePageId,
+            $tcaRecord
+        );
 
-        if ($this->getGeoCoder()->needsToBeGeoCoded($tcaRecord)
-            && !$this->getGeoCoder()->needsToBeGeoCoded($existingRecord)
-            && $this->getGeoCoder()->getGeoCodingAddress($tcaRecord) === $this->getGeoCoder()->getGeoCodingAddress($existingRecord)
+        if ($coder->needsToBeGeoCoded($tcaRecord)
+            && !$coder->needsToBeGeoCoded($existingRecord)
+            && $coder->getGeoCodingAddress($tcaRecord) === $coder->getGeoCodingAddress($existingRecord)
         ) {
-            $tcaRecord = $this->getImporter()->writeExistingCoordinatesToTcaRecord($this->getLocationFactory()->getRecordTableName(), $tcaRecord);
+            $tcaRecord = $importer->writeExistingCoordinatesToTcaRecord(
+                $factory->getRecordTableName(),
+                $tcaRecord
+            );
         }
 
-        if ($this->getGeoCoder()->needsToBeGeoCoded($tcaRecord)) {
+        if ($coder->needsToBeGeoCoded($tcaRecord)) {
             try {
                 $this->geocodingRequests++;
-                $geoCodingAddress = $this->getGeoCoder()->getGeoCodingAddress($tcaRecord);
-                $codingResult = $this->getGeoCoder()->fetchCoordinatesForAddress($geoCodingAddress);
-                $tcaRecord = $this->getLocationFactory()->writeCoordinatesToTcaRecord($tcaRecord, $codingResult);
-            } catch (Exception $e) {
+                $geoCodingAddress = $coder->getGeoCodingAddress($tcaRecord);
+                $codingResult = $coder->fetchCoordinatesForAddress($geoCodingAddress);
+                $tcaRecord = $factory->writeCoordinatesToTcaRecord($tcaRecord, $codingResult);
+            } catch (\Exception $e) {
 
             }
         }
