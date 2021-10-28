@@ -215,10 +215,17 @@ class Batch extends AbstractEntity
 
     protected function getTemporaryFilePath()
     {
-        $filePath = sprintf(PATH_site . 'typo3temp/locations/l-%s-%s.%s', $this->fileHash, getmypid(),
-            pathinfo($this->fileName, PATHINFO_EXTENSION));
-        GeneralUtility::writeFileToTypo3tempDir($filePath, base64_decode($this->fileContent));
+        $filePath = GeneralUtility::tempnam(
+            'location-batch-',
+            pathinfo($this->fileName, PATHINFO_EXTENSION)
+        );
+        GeneralUtility::writeFileToTypo3tempDir($filePath, $this->getFileContent());
         return $filePath;
+    }
+
+    protected function getFileContent(): string
+    {
+        return base64_decode($this->fileContent);
     }
 
     protected function collectTcaRecords()
