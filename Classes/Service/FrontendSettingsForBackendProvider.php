@@ -1,63 +1,87 @@
 <?php
+
 namespace Netlogix\Nxgooglelocations\Service;
 
+use TYPO3\CMS\Backend\Configuration\TypoScript\ConditionMatching\ConditionMatcher as BackendConditionMatcher;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\RootlineUtility;
 use TYPO3\CMS\Extbase\Configuration\BackendConfigurationManager;
-use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
-use TYPO3\CMS\Frontend\Page\PageRepository;
+use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
+use TYPO3\CMS\Frontend\Configuration\TypoScript\ConditionMatching\ConditionMatcher as FrontendConditionMatcher;
 
-class FrontendSettingsForBackendProvider extends BackendConfigurationManager
+class FrontendSettingsForBackendProvider
 {
     /**
-     * @var ObjectManager
+     * @var array<int, array<string, mixed>
      */
-    protected static $_objectManager;
+    protected static $configurationCache = [];
 
-    public static function getConfigurationForPageId($pageId)
+    /**
+     * @param int $pageId
+     * @return array<string, mixed>
+     */
+    public static function getConfigurationForPageId(int $pageId): array
     {
-        self::assureObjectManager();
-        self::resetBackendConfigurationManager();
-
-        $oldTsfe = $GLOBALS['TSFE'];
-        self::createTypoScriptFrontendController($pageId);
-
-        $configurationManager = self::$_objectManager->get(ConfigurationManagerInterface::class);
-        $settings = $configurationManager->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_SETTINGS);
-
-        if (!$oldTsfe) {
-            unset($GLOBALS['TSFE']);
-        } else {
-            $GLOBALS['TSFE'] = $oldTsfe;
+        if (isset(self::$configurationCache[$pageId])) {
+            return self::$configurationCache[$pageId];
         }
 
-        self::resetBackendConfigurationManager();
-        return $settings;
+        $rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $pageId);
+        assert($rootlineUtility instanceof RootlineUtility);
+        $rootline = $rootlineUtility->get();
+
+        self::prepareFrontendConditionMatcher($pageId, $rootline);
+        self::prepareBackendConfigurationManager($pageId, $rootline);
+
+        $backendConfigurationManager = GeneralUtility::makeInstance(BackendConfigurationManager::class);
+        assert($backendConfigurationManager instanceof BackendConfigurationManager);
+        $resetConfigurationCache = self::clearConfigurationCache($backendConfigurationManager);
+
+        $result = $backendConfigurationManager->getConfiguration();
+        self::$configurationCache[$pageId] = $result['settings'] ?? [];
+
+        $resetConfigurationCache();
+
+        return self::$configurationCache[$pageId];
     }
 
-    protected static function resetBackendConfigurationManager()
+    /**
+     * @param int $pageId
+     * @param array<int, array<string, mixed>> $rootline
+     */
+    protected static function prepareFrontendConditionMatcher(int $pageId, array $rootline): void
     {
-        $backendConfigurationManager = self::$_objectManager->get(BackendConfigurationManager::class);
-
-        $backendConfigurationManager->configurationCache = [];
-        $backendConfigurationManager->typoScriptSetupCache = [];
-        $backendConfigurationManager->currentPageId = null;
+        $frontendConditionMatcher = GeneralUtility::makeInstance(FrontendConditionMatcher::class);
+        assert($frontendConditionMatcher instanceof FrontendConditionMatcher);
+        $frontendConditionMatcher->setPageId($pageId);
+        $frontendConditionMatcher->setRootline($rootline);
+        GeneralUtility::addInstance(FrontendConditionMatcher::class, $frontendConditionMatcher);
     }
 
-    protected static function assureObjectManager()
+    /**
+     * @param int $pageId
+     * @param array<int, array<string, mixed>> $rootline
+     */
+    protected static function prepareBackendConfigurationManager(int $pageId, array $rootline): void
     {
-        if (self::$_objectManager) {
-            return;
-        }
-        self::$_objectManager = GeneralUtility::makeInstance(ObjectManager::class);
+        $backendConditionMatcher = GeneralUtility::makeInstance(BackendConditionMatcher::class);
+        assert($backendConditionMatcher instanceof BackendConditionMatcher);
+        $backendConditionMatcher->setPageId($pageId);
+        $backendConditionMatcher->setRootline($rootline);
+        GeneralUtility::addInstance(BackendConditionMatcher::class, $backendConditionMatcher);
     }
 
-    protected static function createTypoScriptFrontendController($pageId)
+    protected static function clearConfigurationCache(BackendConfigurationManager $configurationManager): callable
     {
-        $pageRepository = self::$_objectManager->get(PageRepository::class);
-        $GLOBALS['TSFE'] = new \stdClass();
-        $GLOBALS['TSFE']->id = (string)$pageId;
-        $GLOBALS['TSFE']->tmpl = new \stdClass();
-        $GLOBALS['TSFE']->tmpl->rootLine = $pageRepository->getRootLine($pageId);
+        $typoScriptSetupCache = ObjectAccess::getProperty($configurationManager, 'typoScriptSetupCache', true);
+        ObjectAccess::setProperty($configurationManager, 'typoScriptSetupCache', [], true);
+
+        $configurationCache = ObjectAccess::getProperty($configurationManager, 'configurationCache', true);
+        ObjectAccess::setProperty($configurationManager, 'configurationCache', [], true);
+
+        return static function () use ($typoScriptSetupCache, $configurationCache, $configurationManager) {
+            ObjectAccess::setProperty($configurationManager, 'typoScriptSetupCache', $typoScriptSetupCache, true);
+            ObjectAccess::setProperty($configurationManager, 'configurationCache', $configurationCache, true);
+        };
     }
 }
