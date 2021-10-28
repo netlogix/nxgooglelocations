@@ -178,6 +178,7 @@ class Batch extends AbstractEntity
     public function validate()
     {
         $filePath = $this->getTemporaryFilePath();
+        $factory = $this->getLocationFactory();
         $factory->load($filePath);
         unlink($filePath);
         $factory->compareHeaderRows();
@@ -222,7 +223,7 @@ class Batch extends AbstractEntity
 
     protected function collectTcaRecords()
     {
-        $tcaRecords = $factory->getRecordsForValidRows();
+        $tcaRecords = $this->getLocationFactory()->getRecordsForValidRows();
         $this->setAmountAndResetPosition(count($tcaRecords));
 
         $position = 0;
