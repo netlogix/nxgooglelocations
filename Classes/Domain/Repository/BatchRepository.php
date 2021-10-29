@@ -6,6 +6,7 @@ use Netlogix\Nxgooglelocations\Domain\Model\Batch;
 use TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
+use function func_get_args;
 
 /**
  * @method null|Batch findOneByState(string $state)
@@ -36,5 +37,10 @@ class BatchRepository extends Repository
         $query->matching($query->logicalNot($query->equals('state', Batch::STATE_CLOSED)));
 
         return $query->execute();
+    }
+
+    public function findOneByState(string $state): ?Batch
+    {
+        return $this->__call(__FUNCTION__, func_get_args());
     }
 }

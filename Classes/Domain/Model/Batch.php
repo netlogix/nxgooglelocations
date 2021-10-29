@@ -244,18 +244,31 @@ class Batch extends AbstractEntity
 
     protected function executeDataHandler($tcaRecords)
     {
-        $backendUserId = $this->backendUserId;
-        $storagePageId = $this->storagePageId;
+        $backendUserId = (int)$this->backendUserId;
+        $storagePageId = (int)$this->storagePageId;
+        $deleteUnused = (bool)$this->deleteUnused;
+
         $importer = $this->getImporter();
-        $locationFactory = $this->getLocationFactory();
-        $deleteUnused = $this->deleteUnused;
-        $this->impersonator->runAsBackendUser($backendUserId,
-            function () use ($importer, $locationFactory, $tcaRecords, $storagePageId, $deleteUnused) {
-                $recordUids = $importer->import($locationFactory->getRecordTableName(), $storagePageId, $tcaRecords);
+
+        $recordTableName = $this->getLocationFactory()->getRecordTableName();
+
+        $this->impersonator->runAsBackendUser(
+            $backendUserId,
+            static function () use ($importer, $recordTableName, $tcaRecords, $storagePageId, $deleteUnused) {
+                $recordUids = $importer->import(
+                    $recordTableName,
+                    $storagePageId,
+                    $tcaRecords
+                );
                 if ($deleteUnused) {
-                    $importer->removeRecordsExcept($locationFactory->getRecordTableName(), $storagePageId, $recordUids);
+                    $importer->removeRecordsExcept(
+                        $recordTableName,
+                        $storagePageId,
+                        ... $recordUids
+                    );
                 }
-            });
+            }
+        );
     }
 
     /**
