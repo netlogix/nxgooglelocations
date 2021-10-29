@@ -117,7 +117,9 @@ abstract class LocationFactory
     {
         $result = [];
         foreach ($this->columnNameMap as $tableColumnName => $tcaFieldName) {
-            $result[$tcaFieldName] = $dataRow[$tableColumnName];
+            if ($dataRow[$tableColumnName] !== null) {
+                $result[$tcaFieldName] = $dataRow[$tableColumnName];
+            }
         }
         return $result;
     }
