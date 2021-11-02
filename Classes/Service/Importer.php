@@ -1,9 +1,9 @@
 <?php
+
 namespace Netlogix\Nxgooglelocations\Service;
 
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Database\DatabaseConnection;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -20,9 +20,9 @@ abstract class Importer
     protected $fieldMap;
 
     /**
-     * @var string
+     * @var class-string
      */
-    protected $fieldMapClassName = FieldMap::class;
+    const FIELD_MAP_CLASSNAME = FieldMap::class;
 
     /**
      * @param int $storagePageId
@@ -30,7 +30,17 @@ abstract class Importer
     public function __construct($storagePageId)
     {
         $this->storagePageId = $storagePageId;
-        $this->fieldMap = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class)->get($this->fieldMapClassName);
+        $this->fieldMap = GeneralUtility::makeInstance(static::FIELD_MAP_CLASSNAME);
+        if (!($this->fieldMap instanceof FieldMap)) {
+            throw new \Exception(
+                sprintf(
+                    'Field map must be of type %s, %s given.',
+                    FieldMap::class,
+                    static::FIELD_MAP_CLASSNAME
+                ),
+                1635428593
+            );
+        }
     }
 
     /**
@@ -59,38 +69,34 @@ abstract class Importer
         $dataHandler->process_cmdmap();
 
         return array_map(function ($uid) use ($dataHandler) {
-            return (int)(array_key_exists($uid, $dataHandler->substNEWwithIDs) ? $dataHandler->substNEWwithIDs[$uid] : $uid);
+            return (int)(array_key_exists($uid,
+                $dataHandler->substNEWwithIDs) ? $dataHandler->substNEWwithIDs[$uid] : $uid);
         }, array_keys($data[$recordTableName]));
     }
 
     /**
      * @param string $recordTableName
      * @param int $storagePageId
-     * @param array <int> $recordUids
+     * @param int ...$recordUids
+     * @throws \Doctrine\DBAL\Driver\Exception
      */
-    public function removeRecordsExcept($recordTableName, $storagePageId, $recordUids)
+    public function removeRecordsExcept(string $recordTableName, int $storagePageId, int ...$recordUids): void
     {
         $recordUids[] = 0;
 
-        $listOfRecordUids = join(',', array_map(function ($recordUid) {
-            return (int)$recordUid;
-        }, $recordUids));
-
-        /** @var DatabaseConnection $database */
-        $database = $GLOBALS['TYPO3_DB'];
-        $database->sql_query('SET group_concat_max_len = 32768');
-        $delinquens = GeneralUtility::intExplode(
-            ',',
-            current(
-                current(
-                    $database->exec_SELECTgetRows(
-                        'GROUP_CONCAT(uid)',
-                        $recordTableName,
-                        sprintf('pid = %d AND uid NOT IN (%s) ', $storagePageId, $listOfRecordUids) . BackendUtility::deleteClause($recordTableName)
-                    )
-                )
+        $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
+        $connection = $connectionPool->getConnectionForTable($recordTableName);
+        $query = $connection->createQueryBuilder();
+        $expr = $query->expr();
+        $delinquens = $query
+            ->select('uid')
+            ->from($recordTableName)
+            ->where(
+                $expr->eq('pid', $storagePageId),
+                $expr->notIn('uid', $recordUids)
             )
-        );
+            ->execute()
+            ->fetchFirstColumn();
 
         $commands = [$recordTableName => []];
         foreach ($delinquens as $delinquentUid) {
@@ -133,9 +139,10 @@ abstract class Importer
     }
 
     /**
-     * @param array $tcaRecord
+     * @param string $recordTableName
      * @param int $storagePageId
-     * @return array
+     * @param array $tcaRecord
+     * @return array|null
      */
-    abstract public function getExistingRecord($recordTableName, $storagePageId, array $tcaRecord);
+    abstract public function getExistingRecord(string $recordTableName, int $storagePageId, array $tcaRecord): ?array;
 }

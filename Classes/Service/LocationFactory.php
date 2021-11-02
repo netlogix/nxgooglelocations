@@ -1,12 +1,13 @@
 <?php
+
 namespace Netlogix\Nxgooglelocations\Service;
 
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
-use PHPExcel_Cell;
-use PHPExcel_IOFactory;
-use PHPExcel_Reader_Abstract;
-use PHPExcel_Worksheet;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Reader\BaseReader;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 abstract class LocationFactory
@@ -40,12 +41,12 @@ abstract class LocationFactory
     ];
 
     /**
-     * @var PHPExcel_Worksheet
+     * @var Worksheet
      */
     protected $templateSheet;
 
     /**
-     * @var PHPExcel_Worksheet
+     * @var Worksheet
      */
     protected $contentSheet;
 
@@ -78,7 +79,7 @@ abstract class LocationFactory
                 continue;
             }
             foreach ($rowData as $columnIndex => $cellContent) {
-                $coordinate = PHPExcel_Cell::stringFromColumnIndex($columnIndex) . ($rowIndex + 1);
+                $coordinate = Coordinate::stringFromColumnIndex($columnIndex) . ($rowIndex + 1);
                 if ($template[$rowIndex][$columnIndex] != $content[$rowIndex][$columnIndex]) {
                     throw new \Exception(sprintf(
                         'Import header doesn\'t match import template at position "%s". Should be "%s" but is "%s".',
@@ -116,7 +117,9 @@ abstract class LocationFactory
     {
         $result = [];
         foreach ($this->columnNameMap as $tableColumnName => $tcaFieldName) {
-            $result[$tcaFieldName] = $dataRow[$tableColumnName];
+            if ($dataRow[$tableColumnName] !== null) {
+                $result[$tcaFieldName] = $dataRow[$tableColumnName];
+            }
         }
         return $result;
     }
@@ -168,18 +171,22 @@ abstract class LocationFactory
      */
     protected function getDataRange()
     {
-        return sprintf('A%d:%s%d', $this->templateSheet->getHighestRow() + 1, $this->contentSheet->getHighestColumn(), $this->contentSheet->getHighestRow());
+        return sprintf(
+            'A%d:%s%d',
+            $this->templateSheet->getHighestRow() + 1, $this->contentSheet->getHighestColumn(),
+            $this->contentSheet->getHighestRow()
+        );
     }
 
     /**
      * @param string $fileName
-     * @return PHPExcel_Worksheet
+     * @return Worksheet
      */
     protected function getActiveSheetOfFile($fileName)
     {
         $fileName = GeneralUtility::getFileAbsFileName($fileName);
-        $reader = PHPExcel_IOFactory::createReaderForFile($fileName);
-        if ($reader instanceof PHPExcel_Reader_Abstract) {
+        $reader = IOFactory::createReaderForFile($fileName);
+        if ($reader instanceof BaseReader) {
             $reader->setReadDataOnly(true);
         }
         return $reader->load($fileName)->getActiveSheet();

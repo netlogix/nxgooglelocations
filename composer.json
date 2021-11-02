@@ -6,8 +6,8 @@
     "MIT"
   ],
   "require": {
-    "typo3/cms-core": ">=7.6.0,<8.0",
-    "phpoffice/phpexcel": "^1.8"
+    "typo3/cms-core": "^10.4",
+    "phpoffice/phpspreadsheet": "^1.18"
   },
   "autoload": {
     "psr-4": {
@@ -15,6 +15,12 @@
     }
   },
   "replace": {
-    "netlogix/nxgooglelocations": "self.version"
+    "netlogix/nxgooglelocations": "self.version",
+    "nxgooglelocations": "self.version"
+  },
+  "extra": {
+    "typo3/cms": {
+      "extension-key": "nxgooglelocations"
+    }
   }
 }
