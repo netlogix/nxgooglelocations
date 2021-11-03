@@ -2,29 +2,29 @@
 
 namespace Netlogix\Nxgooglelocations\Service;
 
-use PHPExcel_Exception;
-use PHPExcel_IOFactory;
-use PHPExcel_Reader_Abstract;
-use PHPExcel_Reader_Exception;
-use PHPExcel_Worksheet;
+use PhpOffice\PhpSpreadsheet\Exception as SpreadsheetException;
+use PhpOffice\PhpSpreadsheet\Reader\Exception as ReaderException;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Reader\BaseReader;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 trait ExcelServiceTrait
 {
     /**
-     * @var PHPExcel_Worksheet
+     * @var Worksheet
      */
     protected $templateSheet;
 
     /**
-     * @var PHPExcel_Worksheet
+     * @var Worksheet
      */
     protected $contentSheet;
 
     /**
      * @param string $templateFileName
-     * @throws PHPExcel_Exception
-     * @throws PHPExcel_Reader_Exception
+     * @throws SpreadsheetException
+     * @throws ReaderException
      */
     public function resetTemplateSheet(string $templateFileName)
     {
@@ -33,8 +33,8 @@ trait ExcelServiceTrait
 
     /**
      * @param $fileName
-     * @throws PHPExcel_Exception
-     * @throws PHPExcel_Reader_Exception
+     * @throws SpreadsheetException
+     * @throws ReaderException
      */
     public function load($fileName)
     {
@@ -43,15 +43,15 @@ trait ExcelServiceTrait
 
     /**
      * @param string $fileName
-     * @return PHPExcel_Worksheet
-     * @throws PHPExcel_Exception
-     * @throws PHPExcel_Reader_Exception
+     * @return Worksheet
+     * @throws SpreadsheetException
+     * @throws ReaderException
      */
     protected function getActiveSheetOfFile($fileName)
     {
         $fileName = GeneralUtility::getFileAbsFileName($fileName);
-        $reader = PHPExcel_IOFactory::createReaderForFile($fileName);
-        if ($reader instanceof PHPExcel_Reader_Abstract) {
+        $reader = IOFactory::createReaderForFile($fileName);
+        if ($reader instanceof BaseReader) {
             $reader->setReadDataOnly(true);
         }
         return $reader->load($fileName)->getActiveSheet();

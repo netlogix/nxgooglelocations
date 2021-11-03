@@ -4,11 +4,11 @@ namespace Netlogix\Nxgooglelocations\Service;
 
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
-use PHPExcel_Cell;
-use PHPExcel_Exception;
-use PHPExcel_Reader_Exception;
+
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Property\Exception\InvalidPropertyException;
+use TYPO3\CMS\Extbase\Property\Exception\InvalidSourceException;
 
 abstract class LocationFactory
 {
@@ -34,12 +34,19 @@ abstract class LocationFactory
     /**
      * @var array<string>
      */
-    protected $columnNameMap = [];
+    protected $columnNameMap = [
+        'A' => 'title',
+        'B' => 'address',
+        'C' => 'alterantive_address',
+        'D' => 'latitude',
+        'E' => 'longitude',
+    ];
 
     /**
-     * @throws PHPExcel_Exception
-     * @throws PHPExcel_Reader_Exception
+     * @var Worksheet
      */
+    protected $templateSheet;
+
     public function __construct()
     {
         $this->fieldMap = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class)->get($this->fieldMapClassName);
@@ -56,7 +63,7 @@ abstract class LocationFactory
 
         foreach ($template as $rowIndex => $rowData) {
             foreach ($rowData as $columnIndex => $cellContent) {
-                $coordinate = PHPExcel_Cell::stringFromColumnIndex($columnIndex) . ($rowIndex + 1);
+                $coordinate = Coordinate::stringFromColumnIndex($columnIndex) . ($rowIndex + 1);
                 if ($template[$rowIndex][$columnIndex] != $content[$rowIndex][$columnIndex]) {
                     throw new \Exception(sprintf(
                         'Import header doesn\'t match import template at position "%s". Should be "%s" but is "%s".',
@@ -94,7 +101,9 @@ abstract class LocationFactory
     {
         $result = [];
         foreach ($this->columnNameMap as $tableColumnName => $tcaFieldName) {
-            $result[$tcaFieldName] = $dataRow[$tableColumnName];
+            if ($dataRow[$tableColumnName] !== null) {
+                $result[$tcaFieldName] = $dataRow[$tableColumnName];
+            }
         }
         return $result;
     }
@@ -118,7 +127,7 @@ abstract class LocationFactory
      * @param array $tcaRecord
      * @param CodingResult|null $codingResult
      * @return array
-     * @throws InvalidPropertyException
+     * @throws InvalidSourceException
      */
     public function writeCoordinatesToTcaRecord(array $tcaRecord, CodingResult $codingResult = null)
     {
@@ -148,13 +157,18 @@ abstract class LocationFactory
     protected function getDataRange()
     {
         $firstContentRow = max(... array_keys($this->getHeaderRowsFromTemplate())) + 2;
-        return sprintf('A%d:%s%d', $firstContentRow, $this->contentSheet->getHighestColumn(), $this->contentSheet->getHighestRow());
+        return sprintf(
+            'A%d:%s%d',
+            $firstContentRow,
+            $this->contentSheet->getHighestColumn(),
+            $this->contentSheet->getHighestRow()
+        );
     }
 
     /**
      * The Sheet::getHighestRow() consumes excel meta data. If there's an empty line
      * that has been touched in any way before, e.g. by placing the cursor in it before
-     * saving, this line gets countet as well.
+     * saving, this line gets counted as well.
      * This function actually counts non-empty lines.
      *
      * @return array
