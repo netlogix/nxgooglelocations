@@ -7,8 +7,8 @@ use Netlogix\Nxgooglelocations\Service\BackendUserImpersonator;
 use Netlogix\Nxgooglelocations\Service\GeoCoder;
 use Netlogix\Nxgooglelocations\Service\Importer;
 use Netlogix\Nxgooglelocations\Service\LocationFactory;
-use PHPExcel_Exception;
-use PHPExcel_Reader_Exception;
+use PhpOffice\PhpSpreadsheet\Exception as SpreadsheetException;
+use PhpOffice\PhpSpreadsheet\Reader\Exception as ReaderException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Annotation\ORM as TYPO3;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
@@ -154,8 +154,8 @@ class Batch extends AbstractEntity
 
     /**
      * @param callable|null $callback
-     * @throws PHPExcel_Exception
-     * @throws PHPExcel_Reader_Exception
+     * @throws SpreadsheetException
+     * @throws ReaderException
      */
     public function run(callable $callback = null)
     {
@@ -171,8 +171,8 @@ class Batch extends AbstractEntity
     }
 
     /**
-     * @throws PHPExcel_Exception
-     * @throws PHPExcel_Reader_Exception
+     * @throws SpreadsheetException
+     * @throws ReaderException
      * @throws Exception
      */
     public function validate()
