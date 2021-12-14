@@ -21,7 +21,7 @@ class TableListViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Be\TableListViewH
                 $_POST['pointer'] = 0;
             }
             $result = parent::render();
-            return is_int(strpos($result, '<table')) ? $result : $this->renderChildren();
+            return is_int(strpos($result, '<table')) ? $result : ($this->renderChildren() ?? '');
 
         } finally {
             $_GET = $backup['get'];
