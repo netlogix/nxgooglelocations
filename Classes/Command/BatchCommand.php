@@ -24,12 +24,6 @@ class BatchCommand extends Command
         parent::__construct($name);
     }
 
-    protected function configure()
-    {
-        parent::configure();
-        $this->setDescription('Import jobs from a given feed.');
-    }
-
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $batchRepository = $this->batchRepository;
