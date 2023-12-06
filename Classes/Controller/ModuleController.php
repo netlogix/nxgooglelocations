@@ -7,10 +7,12 @@ namespace Netlogix\Nxgooglelocations\Controller;
 use Exception;
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
 use Netlogix\Nxgooglelocations\Domain\Repository\BatchRepository;
+use Psr\Http\Message\ResponseInterface;
 use SJBR\StaticInfoTables\Domain\Model\Country;
 use SJBR\StaticInfoTables\Domain\Repository\CountryRepository;
-use TYPO3\CMS\Core\Messaging\FlashMessage;
+use TYPO3\CMS\Core\Messaging\AbstractMessage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Http\ForwardResponse;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 abstract class ModuleController extends AbstractBackendModuleController
@@ -25,12 +27,12 @@ abstract class ModuleController extends AbstractBackendModuleController
      */
     protected $batchRepository;
 
-    public function injectCountryRepository(CountryRepository $countryRepository)
+    public function injectCountryRepository(CountryRepository $countryRepository): void
     {
         $this->countryRepository = $countryRepository;
     }
 
-    public function injectBatchRepository(BatchRepository $batchRepository)
+    public function injectBatchRepository(BatchRepository $batchRepository): void
     {
         $this->batchRepository = $batchRepository;
     }
@@ -38,26 +40,27 @@ abstract class ModuleController extends AbstractBackendModuleController
     /**
      * @param int $id
      */
-    public function indexAction($id)
+    public function indexAction($id): ResponseInterface
     {
         if (!$this->settings['enabled']) {
             $this->forwardToErrorWithCannedMessage('disabled');
         }
+
         if (!$this->settings['apiKey']) {
             $this->forwardToErrorWithCannedMessage('missing-api-key');
         }
 
         $allowedCountryCodes = GeneralUtility::trimExplode(',', $this->settings['allowedCountries'], true);
-        if (!$allowedCountryCodes) {
+        if ($allowedCountryCodes === []) {
             $this->forwardToErrorWithCannedMessage('missing-countries');
         }
 
-        if (strtoupper(join('', $allowedCountryCodes)) === 'ALL') {
+        if (strtoupper(implode('', $allowedCountryCodes)) === 'ALL') {
             $this->view->assign('allowedCountries', $this->countryRepository->findAll());
         } else {
             $this->view->assign(
                 'allowedCountries',
-                $this->countryRepository->findAllowedByIsoCodeA3(join(',', $allowedCountryCodes))
+                $this->countryRepository->findAllowedByIsoCodeA3(implode(',', $allowedCountryCodes))
             );
         }
 
@@ -73,6 +76,8 @@ abstract class ModuleController extends AbstractBackendModuleController
 
         $this->view->assign('enableImport', $this->isImportEnabled());
         $this->view->assign('enableExport', $this->isExportEnabled());
+
+        return $this->htmlResponse();
     }
 
     /**
@@ -80,14 +85,14 @@ abstract class ModuleController extends AbstractBackendModuleController
      * @param bool $deleteUnused
      * @param bool $cancelPrevious
      */
-    public function importAction($id, array $file, $deleteUnused, $cancelPrevious, Country $country = null)
+    public function importAction($id, array $file, $deleteUnused, $cancelPrevious, Country $country = null): void
     {
         $batch = $this->mapRequestToBatch($id, $file, $deleteUnused, $cancelPrevious, $country);
 
         try {
             $batch->validate();
-        } catch (Exception $e) {
-            $this->addFlashMessage($e->getMessage(), '', FlashMessage::ERROR);
+        } catch (Exception $exception) {
+            $this->addFlashMessage($exception->getMessage(), '', AbstractMessage::ERROR);
             $this->redirect('index');
         }
 
@@ -115,8 +120,9 @@ abstract class ModuleController extends AbstractBackendModuleController
         $this->redirect('index');
     }
 
-    public function exportAction()
+    public function exportAction(): ResponseInterface
     {
+        return $this->htmlResponse();
     }
 
     /**
@@ -135,9 +141,10 @@ abstract class ModuleController extends AbstractBackendModuleController
         $this->addFlashMessage(
             LocalizationUtility::translate(sprintf('module.flash-messages.%s.content', $reason), $extensionName),
             LocalizationUtility::translate(sprintf('module.flash-messages.%s.title', $reason), $extensionName),
-            FlashMessage::ERROR
+            AbstractMessage::ERROR
         );
-        $this->forward('error');
+
+        return new ForwardResponse('error');
     }
 
     protected function getExtensionNameForLocalLang()

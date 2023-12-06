@@ -13,26 +13,21 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 abstract class Importer
 {
     /**
-     * @var int
-     */
-    protected $storagePageId;
-
-    /**
      * @var FieldMap
      */
-    protected $fieldMap;
+    protected static $fieldMap;
 
     /**
      * @var class-string
      */
-    public const FIELD_MAP_CLASSNAME = FieldMap::class;
+    final public const FIELD_MAP_CLASSNAME = FieldMap::class;
 
     /**
      * @param int $storagePageId
      */
-    public function __construct($storagePageId)
-    {
-        $this->storagePageId = $storagePageId;
+    public function __construct(
+        protected $storagePageId
+    ) {
         $this->fieldMap = GeneralUtility::makeInstance(static::FIELD_MAP_CLASSNAME);
         if (!($this->fieldMap instanceof FieldMap)) {
             throw new Exception(
@@ -59,8 +54,8 @@ abstract class Importer
 
         $count = 0;
         foreach ($tcaRecords as $tcaRecord) {
-            $count++;
-            $uid = $tcaRecord['uid'] ?: sprintf('NEW%s', GeneralUtility::shortMD5(__CLASS__ . $count));
+            ++$count;
+            $uid = $tcaRecord['uid'] ?: sprintf('NEW%s', substr(md5(self::class . $count), 0, 10));
             $data[$recordTableName][$uid] = $tcaRecord;
             $data[$recordTableName][$uid]['pid'] = $storagePageId;
             $data[$recordTableName][$uid][$GLOBALS['TCA'][$recordTableName]['ctrl']['languageField']] = -1;
@@ -71,15 +66,13 @@ abstract class Importer
         $dataHandler->process_datamap();
         $dataHandler->process_cmdmap();
 
-        return array_map(function ($uid) use ($dataHandler) {
-            return (int) (array_key_exists(
-                $uid,
-                $dataHandler->substNEWwithIDs
-            ) ? $dataHandler->substNEWwithIDs[$uid] : $uid);
-        }, array_keys($data[$recordTableName]));
+        return array_map(static fn ($uid): int => (int) (array_key_exists(
+            $uid,
+            $dataHandler->substNEWwithIDs
+        ) ? $dataHandler->substNEWwithIDs[$uid] : $uid), array_keys($data[$recordTableName]));
     }
 
-    public function removeRecordsExcept(string $recordTableName, int $storagePageId, int ...$recordUids): void
+    public function removeRecordsExcept(string $recordTableName, int $storagePageId, array $recordUids = []): void
     {
         $recordUids[] = 0;
 
@@ -91,7 +84,7 @@ abstract class Importer
             ->select('uid')
             ->from($recordTableName)
             ->where($expr->eq('pid', $storagePageId), $expr->notIn('uid', $recordUids))
-            ->execute()
+            ->executeQuery()
             ->fetchFirstColumn();
 
         $commands = [
@@ -108,10 +101,9 @@ abstract class Importer
     }
 
     /**
-     * @param string $recordTableName
      * @return array
      */
-    public function writeExistingIdentifierToTcaRecord($recordTableName, array $tcaRecord)
+    public function writeExistingIdentifierToTcaRecord(string $recordTableName, array $tcaRecord)
     {
         $existingRecord = $this->getExistingRecord($recordTableName, $this->storagePageId, $tcaRecord);
         if ($existingRecord) {
@@ -122,10 +114,9 @@ abstract class Importer
     }
 
     /**
-     * @param string $recordTableName
      * @return array
      */
-    public function writeExistingCoordinatesToTcaRecord($recordTableName, array $tcaRecord)
+    public function writeExistingCoordinatesToTcaRecord(string $recordTableName, array $tcaRecord)
     {
         $existingRecord = $this->getExistingRecord($recordTableName, $this->storagePageId, $tcaRecord);
         if ($existingRecord) {

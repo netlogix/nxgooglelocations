@@ -1,6 +1,6 @@
 <?php
 
-defined('TYPO3') or die();
+defined('TYPO3') || die();
 
 $_EXTKEY = 'nxgooglelocations';
 $LLL = 'LLL:EXT:nxgooglelocations/Resources/Private/Language/locallang_db.xlf:tx_nxgooglelocations_domain_model_batch';
@@ -12,7 +12,6 @@ $value = [
         'tstamp' => 'tstamp',
         'crdate' => 'crdate',
         'cruser_id' => 'cruser_id',
-        'dividers2tabs' => true,
         'type' => 'type',
         'delete' => 'deleted',
         'default_sortby' => 'tstamp DESC, uid DESC',
@@ -67,11 +66,26 @@ $value = [
             'config' => [
                 'type' => 'select',
                 'items' => [
-                    [$LLL . '.state.I.new', 'new'],
-                    [$LLL . '.state.I.validating', 'validating'],
-                    [$LLL . '.state.I.running', 'running'],
-                    [$LLL . '.state.I.persisting', 'persisting'],
-                    [$LLL . '.state.I.closed', 'closed'],
+                    [
+                        'label' => $LLL . '.state.I.new',
+                        'value' => 'new',
+                    ],
+                    [
+                        'label' => $LLL . '.state.I.validating',
+                        'value' => 'validating',
+                    ],
+                    [
+                        'label' => $LLL . '.state.I.running',
+                        'value' => 'running',
+                    ],
+                    [
+                        'label' => $LLL . '.state.I.persisting',
+                        'value' => 'persisting',
+                    ],
+                    [
+                        'label' => $LLL . '.state.I.closed',
+                        'value' => 'closed',
+                    ],
                 ],
                 'size' => 1,
                 'maxitems' => 1,
@@ -154,11 +168,12 @@ $value = [
     ],
 ];
 
-foreach ($value['columns'] as $columName => $columnConfig) {
+foreach (array_keys($value['columns']) as $columName) {
     $value['columns'][$columName]['label'] = $LLL . '.' . $columName;
     $value['columns'][$columName]['exclude'] = false;
     $value['columns'][$columName]['config']['readOnly'] = true;
 }
+
 $value['columns']['api_key']['exclude'] = true;
 
 return $value;

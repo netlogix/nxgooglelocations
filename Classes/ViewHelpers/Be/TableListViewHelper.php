@@ -10,6 +10,7 @@ class TableListViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Be\TableListViewH
 {
     public function render(): string
     {
+        $backup = [];
         $tableName = $this->arguments['tableName'];
         $preventPointer = $tableName !== GeneralUtility::_GP('table');
 
@@ -22,6 +23,7 @@ class TableListViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Be\TableListViewH
                 $_GET['pointer'] = 0;
                 $_POST['pointer'] = 0;
             }
+
             $result = parent::render();
 
             return is_int(strpos($result, '<table')) ? $result : ($this->renderChildren() ?? '');

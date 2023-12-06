@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Rector\CodingStyle\Rector\ClassMethod\UnSpreadOperatorRector;
 use Rector\Config\RectorConfig;
 use Rector\Core\Configuration\Option;
 use Rector\Core\ValueObject\PhpVersion;
@@ -10,6 +11,7 @@ use Rector\PHPUnit\Set\PHPUnitLevelSetList;
 use Rector\PostRector\Rector\NameImportingPostRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
+use Rector\TypeDeclaration\Rector\Property\TypedPropertyFromStrictConstructorRector;
 use Ssch\TYPO3Rector\Rector\General\ConvertImplicitVariablesToExplicitGlobalsRector;
 use Ssch\TYPO3Rector\Rector\General\ExtEmConfRector;
 use Ssch\TYPO3Rector\Rector\v11\v0\SubstituteConstantsModeAndRequestTypeRector;
@@ -96,6 +98,12 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->skip([
         // PHP
         AddLiteralSeparatorToNumberRector::class,
+        UnSpreadOperatorRector::class => [
+            __DIR__ . '/Classes/Service/LocationFactory.php',
+        ],
+        TypedPropertyFromStrictConstructorRector::class => [
+            __DIR__ . '/Classes/Service/Importer.php',
+        ],
 
         // TYPO3
         // @see https://github.com/sabbelasichon/typo3-rector/issues/2536

@@ -72,15 +72,15 @@ class FrontendSettingsForBackendProvider
 
     protected static function clearConfigurationCache(BackendConfigurationManager $configurationManager): callable
     {
-        $typoScriptSetupCache = ObjectAccess::getProperty($configurationManager, 'typoScriptSetupCache', true);
-        ObjectAccess::setProperty($configurationManager, 'typoScriptSetupCache', [], true);
+        $typoScriptSetupCache = ObjectAccess::getProperty($configurationManager, 'typoScriptSetupCache');
+        ObjectAccess::setProperty($configurationManager, 'typoScriptSetupCache', []);
 
-        $configurationCache = ObjectAccess::getProperty($configurationManager, 'configurationCache', true);
-        ObjectAccess::setProperty($configurationManager, 'configurationCache', [], true);
+        $configurationCache = ObjectAccess::getProperty($configurationManager, 'configurationCache');
+        ObjectAccess::setProperty($configurationManager, 'configurationCache', []);
 
-        return static function () use ($typoScriptSetupCache, $configurationCache, $configurationManager) {
-            ObjectAccess::setProperty($configurationManager, 'typoScriptSetupCache', $typoScriptSetupCache, true);
-            ObjectAccess::setProperty($configurationManager, 'configurationCache', $configurationCache, true);
+        return static function () use ($typoScriptSetupCache, $configurationCache, $configurationManager): void {
+            ObjectAccess::setProperty($configurationManager, 'typoScriptSetupCache', $typoScriptSetupCache);
+            ObjectAccess::setProperty($configurationManager, 'configurationCache', $configurationCache);
         };
     }
 }

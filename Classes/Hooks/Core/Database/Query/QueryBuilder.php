@@ -14,7 +14,7 @@ class QueryBuilder extends CoreQueryBuilder
      *
      * @see \TYPO3\CMS\Core\Database\Query\QueryBuilder::addSelect
      */
-    public static function addUnquotedSelect(CoreQueryBuilder $queryBuilder, string ...$selects): CoreQueryBuilder
+    public static function addUnquotedSelect(CoreQueryBuilder $queryBuilder, array $selects = []): CoreQueryBuilder
     {
         $queryBuilder->concreteQueryBuilder->addSelect(...$selects);
 

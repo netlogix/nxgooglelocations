@@ -6,31 +6,29 @@ namespace Netlogix\Nxgooglelocations\Controller;
 
 use Netlogix\Nxgooglelocations\Service\FrontendSettingsForBackendProvider;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
+use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Backend\View\BackendTemplateView;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Imaging\Icon;
+use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\View\ViewInterface;
-use TYPO3\CMS\Lang\LanguageService;
 
 class AbstractBackendModuleController extends ActionController
 {
-    /**
-     * @var BackendTemplateView
-     */
-    protected $view;
-
-    /**
-     * @var BackendTemplateView
-     */
-    protected $defaultViewObjectName = BackendTemplateView::class;
+    public $controllerContext;
 
     /**
      * @var array
      */
     protected $pageRecord = [];
+
+    public function __construct(
+        private readonly ModuleTemplateFactory $moduleTemplateFactory,
+        private readonly IconFactory $iconFactory
+    ) {
+    }
 
     /**
      * Object initialization
@@ -45,22 +43,22 @@ class AbstractBackendModuleController extends ActionController
         $this->settings = FrontendSettingsForBackendProvider::getConfigurationForPageId($id);
     }
 
-    public function initializeView(ViewInterface $view)
+    public function initializeView(ViewInterface $view): void
     {
-        /** @var BackendTemplateView $view */
-        parent::initializeView($view);
+        $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
         $this->registerDocheaderButtons();
-        $this->view->getModuleTemplate()
+        $moduleTemplate
             ->setFlashMessageQueue($this->controllerContext->getFlashMessageQueue());
-        $this->view->getModuleTemplate()
+        $moduleTemplate
             ->getDocHeaderComponent()
             ->setMetaInformation($this->pageRecord);
     }
 
     protected function registerDocheaderButtons()
     {
+        $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
         /** @var ButtonBar $buttonBar */
-        $buttonBar = $this->view->getModuleTemplate()
+        $buttonBar = $moduleTemplate
             ->getDocHeaderComponent()
             ->getButtonBar();
 
@@ -70,12 +68,12 @@ class AbstractBackendModuleController extends ActionController
                 $this->getLanguageService()
                     ->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.reload')
             )
-            ->setIcon($this->view->getModuleTemplate()->getIconFactory()->getIcon('actions-refresh', Icon::SIZE_SMALL));
+            ->setIcon($this->iconFactory->getIcon('actions-refresh', Icon::SIZE_SMALL));
         $buttonBar->addButton($refreshButton, ButtonBar::BUTTON_POSITION_RIGHT);
     }
 
     /**
-     * @return LanguageService
+     * @return \TYPO3\CMS\Core\Localization\LanguageService
      */
     protected function getLanguageService()
     {

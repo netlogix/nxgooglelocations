@@ -6,11 +6,11 @@ namespace Netlogix\Nxgooglelocations\Service;
 
 use Exception;
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
-
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 abstract class LocationFactory
 {
@@ -51,9 +51,7 @@ abstract class LocationFactory
 
     public function __construct()
     {
-        $this->fieldMap = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class)->get(
-            $this->fieldMapClassName
-        );
+        $this->fieldMap = GeneralUtility::makeInstance(ObjectManager::class)->get($this->fieldMapClassName);
         $this->resetTemplateSheet($this->templateFileName);
     }
 
@@ -89,10 +87,10 @@ abstract class LocationFactory
             $formatData = true,
             $returnCellRef = true
         );
-        $collection = array_filter($collection, [$this, 'containsData']);
-        $collection = array_map([$this, 'mapDataRowToTcaRecord'], $collection);
+        $collection = array_filter($collection, $this->containsData(...));
+        $collection = array_map($this->mapDataRowToTcaRecord(...), $collection);
 
-        return array_filter($collection, [$this, 'containsData']);
+        return array_filter($collection, $this->containsData(...));
     }
 
     /**
@@ -111,17 +109,16 @@ abstract class LocationFactory
     }
 
     /**
-     * @param mixed $list
      * @return bool
      */
-    public static function containsData($list)
+    public static function containsData(mixed $list)
     {
-        return !!array_filter($list, function ($field) {
+        return (bool) array_filter($list, static function ($field): bool {
             if (is_array($field)) {
                 return self::containsData($field);
-            } else {
-                return !!$field;
             }
+
+            return (bool) $field;
         });
     }
 
@@ -136,7 +133,8 @@ abstract class LocationFactory
                 $tcaRecord[$this->fieldMap->__get($fieldName)] = $codingResult->__get($fieldName);
                 if (in_array($fieldName, ['rawData', 'position'], true)) {
                     $tcaRecord[$this->fieldMap->__get($fieldName)] = json_encode(
-                        $tcaRecord[$this->fieldMap->__get($fieldName)]
+                        $tcaRecord[$this->fieldMap->__get($fieldName)],
+                        JSON_THROW_ON_ERROR
                     );
                 }
             }
@@ -178,8 +176,9 @@ abstract class LocationFactory
      */
     protected function getHeaderRowsFromTemplate()
     {
-        return array_filter($this->templateSheet->toArray(), function (array $rowData) {
-            return self::containsData($rowData);
-        });
+        return array_filter(
+            $this->templateSheet->toArray(),
+            static fn (array $rowData): bool => self::containsData($rowData)
+        );
     }
 }

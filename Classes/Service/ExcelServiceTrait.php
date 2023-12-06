@@ -21,12 +21,12 @@ trait ExcelServiceTrait
      */
     protected $contentSheet;
 
-    public function resetTemplateSheet(string $templateFileName)
+    public function resetTemplateSheet(string $templateFileName): void
     {
         $this->templateSheet = $this->getActiveSheetOfFile($templateFileName);
     }
 
-    public function load($fileName)
+    public function load($fileName): void
     {
         $this->contentSheet = $this->getActiveSheetOfFile($fileName);
     }

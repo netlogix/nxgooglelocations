@@ -22,21 +22,28 @@ use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
  */
 class CodingResult
 {
-    public const PROBABILITY_ZERO_RESULTS = -1;
+    /**
+     * @var int
+     */
+    final public const PROBABILITY_ZERO_RESULTS = -1;
 
-    public const PROBABILITY_MANUALLY_IMPORT = -255;
+    /**
+     * @var int
+     */
+    final public const PROBABILITY_MANUALLY_IMPORT = -255;
 
-    public const PROBABILITY_MANUALLY_EDITOR = -256;
+    /**
+     * @var int
+     */
+    final public const PROBABILITY_MANUALLY_EDITOR = -256;
 
     protected $minProbability = 0;
 
     protected $maxProbability = 10;
 
-    protected $rawData;
-
-    public function __construct(array $rawData)
-    {
-        $this->rawData = $rawData;
+    public function __construct(
+        protected array $rawData
+    ) {
     }
 
     public function __get($propertyName)
@@ -61,12 +68,17 @@ class CodingResult
             case 'probability':
                 if ($this->status === GeoCoder::STATUS_ZERO_RESULTS) {
                     return self::PROBABILITY_ZERO_RESULTS;
-                } else {
-                    return max(
-                        $this->minProbability,
-                        min($this->maxProbability, count(ObjectAccess::getPropertyPath($this->rawData, 'results')))
-                    );
                 }
+
+                return max(
+                    $this->minProbability,
+                    min(
+                        $this->maxProbability,
+                        is_countable(ObjectAccess::getPropertyPath($this->rawData, 'results')) ? count(
+                            ObjectAccess::getPropertyPath($this->rawData, 'results')
+                        ) : 0
+                    )
+                );
         }
 
         throw new InvalidSourceException('There is no property "' . $propertyName . '" in CodingResults.');

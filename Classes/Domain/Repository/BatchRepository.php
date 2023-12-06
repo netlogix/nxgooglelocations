@@ -15,7 +15,9 @@ use TYPO3\CMS\Extbase\Persistence\Repository;
  */
 class BatchRepository extends Repository
 {
-    public function initializeObject()
+    public $objectManager;
+
+    public function initializeObject(): void
     {
         $defaultQuerySettings = $this->objectManager->get(QuerySettingsInterface::class);
         assert($defaultQuerySettings instanceof QuerySettingsInterface);
@@ -34,6 +36,7 @@ class BatchRepository extends Repository
         $querySettings = $query->getQuerySettings();
         $querySettings->setRespectStoragePage(true);
         $querySettings->setStoragePageIds([$storagePageId]);
+
         $query->setQuerySettings($querySettings);
 
         $query->matching($query->logicalNot($query->equals('state', Batch::STATE_CLOSED)));

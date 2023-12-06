@@ -13,11 +13,20 @@ use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
 abstract class GeoCoder
 {
-    public const FETCH_URL = 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s';
+    /**
+     * @var string
+     */
+    final public const FETCH_URL = 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s';
 
-    public const STATUS_OK = 'OK';
+    /**
+     * @var string
+     */
+    final public const STATUS_OK = 'OK';
 
-    public const STATUS_ZERO_RESULTS = 'ZERO_RESULTS';
+    /**
+     * @var string
+     */
+    final public const STATUS_ZERO_RESULTS = 'ZERO_RESULTS';
 
     /**
      * @var FieldMap
@@ -38,14 +47,12 @@ abstract class GeoCoder
     protected $probabilityThreshold = 1;
 
     /**
-     * @var string
+     * @param string $apiKey
      */
-    protected $apiKey;
-
-    public function __construct($apiKey)
-    {
+    public function __construct(
+        protected $apiKey
+    ) {
         $this->fieldMap = GeneralUtility::makeInstance(ObjectManager::class)->get($this->fieldMapClassName);
-        $this->apiKey = $apiKey;
     }
 
     /**+
@@ -57,10 +64,7 @@ abstract class GeoCoder
         return $tcaRecord[$this->fieldMap->addressToGeocode] ?: $tcaRecord[$this->fieldMap->addressToDisplay];
     }
 
-    /**
-     * @return bool
-     */
-    public function needsToBeGeoCoded(array $tcaRecord)
+    public function needsToBeGeoCoded(array $tcaRecord): bool
     {
         return (!$tcaRecord[$this->fieldMap->latitude] && !$tcaRecord[$this->fieldMap->longitude]) || ($tcaRecord[$this->fieldMap->probability] > $this->probabilityThreshold);
     }
@@ -82,21 +86,20 @@ abstract class GeoCoder
      */
     public function fetchCoordinatesForAddress($address)
     {
-        $urlWithApiKey = sprintf(self::FETCH_URL, urlencode($address), urlencode($this->apiKey));
-        $geocode = json_decode(GeneralUtility::getUrl($urlWithApiKey), true);
+        $urlWithApiKey = sprintf(self::FETCH_URL, urlencode((string) $address), urlencode($this->apiKey));
+        $geocode = json_decode((string) GeneralUtility::getUrl($urlWithApiKey), true, 512, JSON_THROW_ON_ERROR);
         $status = ObjectAccess::getPropertyPath($geocode, 'status');
         switch ($status) {
             case self::STATUS_OK:
-                return new CodingResult($geocode);
             case self::STATUS_ZERO_RESULTS:
                 return new CodingResult($geocode);
             default:
                 $message = json_encode(
-                    array_filter([$status, ObjectAccess::getPropertyPath($geocode, 'error_message')], function (
-                        $value
-                    ) {
-                        return !!$value;
-                    })
+                    array_filter(
+                        [$status, ObjectAccess::getPropertyPath($geocode, 'error_message')],
+                        static fn ($value): bool => (bool) $value
+                    ),
+                    JSON_THROW_ON_ERROR
                 );
 
                 throw new Exception('An error occured: ' . $message);

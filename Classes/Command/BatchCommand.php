@@ -16,23 +16,21 @@ use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 
 class BatchCommand extends Command
 {
+    public function __construct(
+        private readonly BatchRepository $batchRepository,
+        private readonly PersistenceManagerInterface $persistenceManager,
+        string $name = null
+    ) {
+        parent::__construct($name);
+    }
+
     protected function configure()
     {
         parent::configure();
         $this->setDescription('Import jobs from a given feed.');
     }
 
-    public function injectBatchRepository(BatchRepository $batchRepository)
-    {
-        $this->batchRepository = $batchRepository;
-    }
-
-    public function injectPersistenceManager(PersistenceManagerInterface $persistenceManager)
-    {
-        $this->persistenceManager = $persistenceManager;
-    }
-
-    public function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $batchRepository = $this->batchRepository;
         $persistenceManager = $this->persistenceManager;
@@ -45,7 +43,10 @@ class BatchCommand extends Command
             return 0;
         }
 
-        $batch->run(static function ($batch, $amount, $position, $state) use ($batchRepository, $persistenceManager) {
+        $batch->run(static function ($batch, $amount, $position, $state) use (
+            $batchRepository,
+            $persistenceManager
+        ): void {
             $batchRepository->update($batch);
             $persistenceManager->persistAll();
         });
@@ -55,8 +56,7 @@ class BatchCommand extends Command
 
     public function getDatabaseConnection(): Connection
     {
-        $pool = GeneralUtility::makeInstance(ConnectionPool::class);
-
-        return $pool->getConnectionByName(ConnectionPool::DEFAULT_CONNECTION_NAME);
+        return GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getConnectionByName(ConnectionPool::DEFAULT_CONNECTION_NAME);
     }
 }

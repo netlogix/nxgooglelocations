@@ -12,11 +12,20 @@ use TYPO3\CMS\Core\Utility\MathUtility;
 
 class DistanceQueryFactory
 {
-    public const DISTANCE_FACTOR_FOR_KM = 6371;
+    /**
+     * @var int
+     */
+    final public const DISTANCE_FACTOR_FOR_KM = 6371;
 
-    public const DISTANCE_FACTOR_FOR_MILES = 3959;
+    /**
+     * @var int
+     */
+    final public const DISTANCE_FACTOR_FOR_MILES = 3959;
 
-    public const QUERY_TEMPLATE = <<<'MySQL'
+    /**
+     * @var string
+     */
+    final public const QUERY_TEMPLATE = <<<'MySQL'
 		(
 			{distanceFactor}
 			* ACOS(
@@ -35,17 +44,11 @@ class DistanceQueryFactory
 		) AS {result.calculatedDistance}
 MySQL;
 
-    protected $tableName = '';
-
-    protected $latitudePropertyName = '';
-
-    protected $longitudePropertyName = '';
-
-    public function __construct(string $tableName, string $latitudePropertyName, string $longitudePropertyName)
-    {
-        $this->tableName = $tableName;
-        $this->latitudePropertyName = $latitudePropertyName;
-        $this->longitudePropertyName = $longitudePropertyName;
+    public function __construct(
+        protected string $tableName,
+        protected string $latitudePropertyName,
+        protected string $longitudePropertyName
+    ) {
     }
 
     /**
@@ -83,8 +86,8 @@ MySQL;
         $antipodalLongitude = $longitude + 180;
 
         $replace = [
-            '{center.latitude}' => (float) $latitude,
-            '{center.longitude}' => (float) $longitude,
+            '{center.latitude}' => $latitude,
+            '{center.longitude}' => $longitude,
             '{antipode.latitude}' => $antipodalLatitude,
             '{antipode.longitude}' => $antipodalLongitude,
             '{marker.zerozero}' => '(NOT {marker.latitude} AND NOT {marker.longitude})',
@@ -101,9 +104,13 @@ MySQL;
     {
         if (MathUtility::canBeInterpretedAsInteger($distanceFactor)) {
             return (int) $distanceFactor;
-        } elseif (strtolower($distanceFactor) === 'km') {
+        }
+
+        if (strtolower((string) $distanceFactor) === 'km') {
             return self::DISTANCE_FACTOR_FOR_KM;
-        } elseif (strtolower($distanceFactor) === 'miles' || strtolower($distanceFactor) === 'mi') {
+        }
+
+        if (strtolower((string) $distanceFactor) === 'miles' || strtolower((string) $distanceFactor) === 'mi') {
             return self::DISTANCE_FACTOR_FOR_MILES;
         }
     }
