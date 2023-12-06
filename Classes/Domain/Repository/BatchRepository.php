@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Domain\Repository;
 
+use function func_get_args;
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
 use TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
-use function func_get_args;
 
 /**
  * @method null|Batch findOneByState(string $state)

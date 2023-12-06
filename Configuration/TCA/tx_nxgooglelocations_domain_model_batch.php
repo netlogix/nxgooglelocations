@@ -1,5 +1,5 @@
 <?php
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+
 
 defined('TYPO3_MODE') or die();
 
@@ -17,8 +17,7 @@ $value = [
         'type' => 'type',
         'delete' => 'deleted',
         'default_sortby' => 'tstamp DESC, uid DESC',
-        'enablecolumns' => [
-        ],
+        'enablecolumns' => [],
         'searchFields' => 'file_name',
         'typeicon_column' => 'type',
         'typeicon_classes' => [
@@ -43,7 +42,7 @@ $value = [
                 backend_user_id,
                 file_name,
                 file_hash
-            '
+            ',
         ],
     ],
     'palettes' => [],
@@ -56,7 +55,7 @@ $value = [
                 'renderType' => 'selectSingle',
                 'items' => [],
                 'required' => true,
-            ]
+            ],
         ],
         'tstamp' => [
             'config' => [
@@ -79,7 +78,7 @@ $value = [
                 'maxitems' => 1,
                 'renderType' => 'selectSingle',
                 'required' => true,
-            ]
+            ],
         ],
         'delete_unused' => [
             'config' => [
@@ -90,28 +89,28 @@ $value = [
             'config' => [
                 'type' => 'input',
                 'size' => 30,
-                'eval' => 'trim'
+                'eval' => 'trim',
             ],
         ],
         'position' => [
             'config' => [
                 'type' => 'input',
                 'size' => 30,
-                'eval' => 'trim'
+                'eval' => 'trim',
             ],
         ],
         'geocoding_requests' => [
             'config' => [
                 'type' => 'input',
                 'size' => 30,
-                'eval' => 'trim'
+                'eval' => 'trim',
             ],
         ],
         'api_key' => [
             'config' => [
                 'type' => 'input',
                 'size' => 30,
-                'eval' => 'trim'
+                'eval' => 'trim',
             ],
         ],
         'storage_page_id' => [
@@ -143,14 +142,14 @@ $value = [
             'config' => [
                 'type' => 'input',
                 'size' => 30,
-                'eval' => 'trim'
+                'eval' => 'trim',
             ],
         ],
         'file_hash' => [
             'config' => [
                 'type' => 'input',
                 'size' => 30,
-                'eval' => 'trim'
+                'eval' => 'trim',
             ],
         ],
     ],

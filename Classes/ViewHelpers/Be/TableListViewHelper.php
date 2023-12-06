@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\ViewHelpers\Be;
 
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -15,14 +17,14 @@ class TableListViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Be\TableListViewH
             if ($preventPointer) {
                 $backup = [
                     'get' => $_GET,
-                    'post' => $_POST
+                    'post' => $_POST,
                 ];
                 $_GET['pointer'] = 0;
                 $_POST['pointer'] = 0;
             }
             $result = parent::render();
-            return is_int(strpos($result, '<table')) ? $result : ($this->renderChildren() ?? '');
 
+            return is_int(strpos($result, '<table')) ? $result : ($this->renderChildren() ?? '');
         } finally {
             $_GET = $backup['get'];
             $_POST = $backup['post'];

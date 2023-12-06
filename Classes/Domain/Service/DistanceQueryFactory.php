@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Domain\Service;
 
 use Netlogix\Nxgooglelocations\Hooks\Core\Database\Query\QueryBuilder;
@@ -10,11 +12,11 @@ use TYPO3\CMS\Core\Utility\MathUtility;
 
 class DistanceQueryFactory
 {
-	const DISTANCE_FACTOR_FOR_KM = 6371;
+    public const DISTANCE_FACTOR_FOR_KM = 6371;
 
-	const DISTANCE_FACTOR_FOR_MILES = 3959;
+    public const DISTANCE_FACTOR_FOR_MILES = 3959;
 
-	const QUERY_TEMPLATE = <<<'MySQL'
+    public const QUERY_TEMPLATE = <<<'MySQL'
 		(
 			{distanceFactor}
 			* ACOS(
@@ -33,75 +35,81 @@ class DistanceQueryFactory
 		) AS {result.calculatedDistance}
 MySQL;
 
-	protected $tableName = '';
+    protected $tableName = '';
 
-	protected $latitudePropertyName = '';
+    protected $latitudePropertyName = '';
 
-	protected $longitudePropertyName = '';
+    protected $longitudePropertyName = '';
 
-	public function __construct(
-		string $tableName,
-		string $latitudePropertyName,
-		string $longitudePropertyName
-	) {
-		$this->tableName = $tableName;
-		$this->latitudePropertyName = $latitudePropertyName;
-		$this->longitudePropertyName = $longitudePropertyName;
-	}
+    public function __construct(string $tableName, string $latitudePropertyName, string $longitudePropertyName)
+    {
+        $this->tableName = $tableName;
+        $this->latitudePropertyName = $latitudePropertyName;
+        $this->longitudePropertyName = $longitudePropertyName;
+    }
 
-	/**
-	 * @param float $latitude
-	 * @param float $longitude
-	 * @param int | string $distanceFactor Can be either "km", "mi", 6371 or 3959.
-	 * @param string $distanceAs
-	 * @return CoreQueryBuilder
-	 */
-	public function getDistanceQuery(float $latitude, float $longitude, $distanceFactor, string $distanceAs = 'distance'): CoreQueryBuilder
-	{
-		$cleanedDistanceFactor = $this->cleanDistanceFactor($distanceFactor);
+    /**
+     * @param int | string $distanceFactor Can be either "km", "mi", 6371 or 3959.
+     */
+    public function getDistanceQuery(
+        float $latitude,
+        float $longitude,
+        $distanceFactor,
+        string $distanceAs = 'distance'
+    ): CoreQueryBuilder {
+        $cleanedDistanceFactor = $this->cleanDistanceFactor($distanceFactor);
 
-		$query = $this->getConnectionPool()->getQueryBuilderForTable($this->tableName);
-		$query
-			->select(sprintf('%s.*', $this->tableName))
-			->from($this->tableName)
-			->orderBy($distanceAs);
-		QueryBuilder::addUnquotedSelect($query, $this->getDistanceQueryAttribute($latitude, $longitude, $cleanedDistanceFactor, $distanceAs));
-		return $query;
-	}
+        $query = $this->getConnectionPool()
+            ->getQueryBuilderForTable($this->tableName);
+        $query
+            ->select(sprintf('%s.*', $this->tableName))
+            ->from($this->tableName)
+            ->orderBy($distanceAs);
+        QueryBuilder::addUnquotedSelect(
+            $query,
+            $this->getDistanceQueryAttribute($latitude, $longitude, $cleanedDistanceFactor, $distanceAs)
+        );
 
-	protected function getDistanceQueryAttribute(float $latitude, float $longitude, int $distanceFactor, string $distanceAs): string
-	{
-		$antipodalLatitude = -1 * $latitude;
-		$antipodalLongitude = $longitude + 180;
+        return $query;
+    }
 
-		$replace = [
-			'{center.latitude}' => (float)$latitude,
-			'{center.longitude}' => (float)$longitude,
-			'{antipode.latitude}' => $antipodalLatitude,
-			'{antipode.longitude}' => $antipodalLongitude,
-			'{marker.zerozero}' => '(NOT {marker.latitude} AND NOT {marker.longitude})',
-			'{marker.latitude}' => $this->latitudePropertyName,
-			'{marker.longitude}' => $this->longitudePropertyName,
-			'{distanceFactor}' => $distanceFactor,
-			'{result.calculatedDistance}' => $distanceAs
-		];
+    protected function getDistanceQueryAttribute(
+        float $latitude,
+        float $longitude,
+        int $distanceFactor,
+        string $distanceAs
+    ): string {
+        $antipodalLatitude = -1 * $latitude;
+        $antipodalLongitude = $longitude + 180;
 
-		return str_replace(array_keys($replace), array_values($replace), self::QUERY_TEMPLATE);
-	}
+        $replace = [
+            '{center.latitude}' => (float) $latitude,
+            '{center.longitude}' => (float) $longitude,
+            '{antipode.latitude}' => $antipodalLatitude,
+            '{antipode.longitude}' => $antipodalLongitude,
+            '{marker.zerozero}' => '(NOT {marker.latitude} AND NOT {marker.longitude})',
+            '{marker.latitude}' => $this->latitudePropertyName,
+            '{marker.longitude}' => $this->longitudePropertyName,
+            '{distanceFactor}' => $distanceFactor,
+            '{result.calculatedDistance}' => $distanceAs,
+        ];
 
-	protected function cleanDistanceFactor($distanceFactor): int
-	{
-		if (MathUtility::canBeInterpretedAsInteger($distanceFactor)) {
-			return (int)$distanceFactor;
-		} elseif (strtolower($distanceFactor) === 'km') {
-			return self::DISTANCE_FACTOR_FOR_KM;
-		} elseif (strtolower($distanceFactor) === 'miles' || strtolower($distanceFactor) === 'mi') {
-			return self::DISTANCE_FACTOR_FOR_MILES;
-		}
-	}
+        return str_replace(array_keys($replace), array_values($replace), self::QUERY_TEMPLATE);
+    }
 
-	protected function getConnectionPool(): ConnectionPool
-	{
-		return GeneralUtility::makeInstance(ConnectionPool::class);
-	}
+    protected function cleanDistanceFactor($distanceFactor): int
+    {
+        if (MathUtility::canBeInterpretedAsInteger($distanceFactor)) {
+            return (int) $distanceFactor;
+        } elseif (strtolower($distanceFactor) === 'km') {
+            return self::DISTANCE_FACTOR_FOR_KM;
+        } elseif (strtolower($distanceFactor) === 'miles' || strtolower($distanceFactor) === 'mi') {
+            return self::DISTANCE_FACTOR_FOR_MILES;
+        }
+    }
+
+    protected function getConnectionPool(): ConnectionPool
+    {
+        return GeneralUtility::makeInstance(ConnectionPool::class);
+    }
 }

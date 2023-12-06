@@ -1,6 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Service;
 
+use Exception;
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -9,11 +13,11 @@ use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
 abstract class GeoCoder
 {
-    const FETCH_URL = 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s';
+    public const FETCH_URL = 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s';
 
-    const STATUS_OK = 'OK';
+    public const STATUS_OK = 'OK';
 
-    const STATUS_ZERO_RESULTS = 'ZERO_RESULTS';
+    public const STATUS_ZERO_RESULTS = 'ZERO_RESULTS';
 
     /**
      * @var FieldMap
@@ -54,7 +58,6 @@ abstract class GeoCoder
     }
 
     /**
-     * @param array $tcaRecord
      * @return bool
      */
     public function needsToBeGeoCoded(array $tcaRecord)
@@ -63,21 +66,19 @@ abstract class GeoCoder
     }
 
     /**
-     * @param array $tcaRecord
      * @return array
      */
     public function setProbabilityToManually(array $tcaRecord)
     {
         $tcaRecord[$this->fieldMap->probability] = CodingResult::PROBABILITY_MANUALLY_IMPORT;
+
         return $tcaRecord;
     }
 
     /**
      * TODO: Add some caching
      *
-     * @param $address
      * @return CodingResult
-     * @throws \Exception
      */
     public function fetchCoordinatesForAddress($address)
     {
@@ -90,10 +91,15 @@ abstract class GeoCoder
             case self::STATUS_ZERO_RESULTS:
                 return new CodingResult($geocode);
             default:
-                $message = json_encode(array_filter([$status, ObjectAccess::getPropertyPath($geocode, 'error_message')], function ($value) {
-                    return !!$value;
-                }));
-                throw new \Exception('An error occured: ' . $message);
+                $message = json_encode(
+                    array_filter([$status, ObjectAccess::getPropertyPath($geocode, 'error_message')], function (
+                        $value
+                    ) {
+                        return !!$value;
+                    })
+                );
+
+                throw new Exception('An error occured: ' . $message);
         }
     }
 }

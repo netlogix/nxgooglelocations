@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Command;
 
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
@@ -25,9 +27,6 @@ class BatchCommand extends Command
         $this->batchRepository = $batchRepository;
     }
 
-    /**
-     * @param PersistenceManagerInterface $persistenceManager
-     */
     public function injectPersistenceManager(PersistenceManagerInterface $persistenceManager)
     {
         $this->persistenceManager = $persistenceManager;
@@ -57,6 +56,7 @@ class BatchCommand extends Command
     public function getDatabaseConnection(): Connection
     {
         $pool = GeneralUtility::makeInstance(ConnectionPool::class);
+
         return $pool->getConnectionByName(ConnectionPool::DEFAULT_CONNECTION_NAME);
     }
 }

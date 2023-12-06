@@ -1,17 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Controller;
 
+use Exception;
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
 use Netlogix\Nxgooglelocations\Domain\Repository\BatchRepository;
 use SJBR\StaticInfoTables\Domain\Model\Country;
 use SJBR\StaticInfoTables\Domain\Repository\CountryRepository;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Mvc\Exception\StopActionException;
-use TYPO3\CMS\Extbase\Mvc\Exception\UnsupportedRequestTypeException;
-use TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException;
-use TYPO3\CMS\Extbase\Persistence\Exception\UnknownObjectException;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 abstract class ModuleController extends AbstractBackendModuleController
@@ -26,17 +25,11 @@ abstract class ModuleController extends AbstractBackendModuleController
      */
     protected $batchRepository;
 
-    /**
-     * @param CountryRepository $countryRepository
-     */
     public function injectCountryRepository(CountryRepository $countryRepository)
     {
         $this->countryRepository = $countryRepository;
     }
 
-    /**
-     * @param BatchRepository $batchRepository
-     */
     public function injectBatchRepository(BatchRepository $batchRepository)
     {
         $this->batchRepository = $batchRepository;
@@ -44,7 +37,6 @@ abstract class ModuleController extends AbstractBackendModuleController
 
     /**
      * @param int $id
-     * @throws StopActionException
      */
     public function indexAction($id)
     {
@@ -63,21 +55,17 @@ abstract class ModuleController extends AbstractBackendModuleController
         if (strtoupper(join('', $allowedCountryCodes)) === 'ALL') {
             $this->view->assign('allowedCountries', $this->countryRepository->findAll());
         } else {
-            $this->view->assign('allowedCountries', $this->countryRepository->findAllowedByIsoCodeA3(join(',', $allowedCountryCodes)));
+            $this->view->assign(
+                'allowedCountries',
+                $this->countryRepository->findAllowedByIsoCodeA3(join(',', $allowedCountryCodes))
+            );
         }
-
 
         $this->view->assign('id', $id);
         $this->view->assign('localLangExtensionName', $this->getExtensionNameForLocalLang());
         $this->view->assign('batches', [
             'tableName' => $this->getTabeNameForBatchRecords(),
-            'fieldList' => [
-                'file_name',
-                'state',
-                'amount',
-                'position',
-                'tstamp'
-            ]
+            'fieldList' => ['file_name', 'state', 'amount', 'position', 'tstamp'],
         ]);
         $this->view->assign('locations', [
             'tableName' => $this->getTableNameForLocationRecords(),
@@ -89,14 +77,8 @@ abstract class ModuleController extends AbstractBackendModuleController
 
     /**
      * @param int $id
-     * @param array $file
      * @param bool $deleteUnused
      * @param bool $cancelPrevious
-     * @param Country|null $country
-     * @throws StopActionException
-     * @throws UnsupportedRequestTypeException
-     * @throws IllegalObjectTypeException
-     * @throws UnknownObjectException
      */
     public function importAction($id, array $file, $deleteUnused, $cancelPrevious, Country $country = null)
     {
@@ -104,7 +86,7 @@ abstract class ModuleController extends AbstractBackendModuleController
 
         try {
             $batch->validate();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->addFlashMessage($e->getMessage(), '', FlashMessage::ERROR);
             $this->redirect('index');
         }
@@ -117,7 +99,11 @@ abstract class ModuleController extends AbstractBackendModuleController
                 $previousBatch->cancle();
                 $this->batchRepository->update($previousBatch);
                 $this->addFlashMessage(
-                    LocalizationUtility::translate('module.flash-messages.job-canceled.content', $extensionName, [$previousBatch->getFileName()])
+                    LocalizationUtility::translate(
+                        'module.flash-messages.job-canceled.content',
+                        $extensionName,
+                        [$previousBatch->getFileName()]
+                    )
                 );
             }
         }
@@ -142,7 +128,6 @@ abstract class ModuleController extends AbstractBackendModuleController
 
     /**
      * @param string $reason
-     * @throws StopActionException
      */
     protected function forwardToErrorWithCannedMessage($reason)
     {
@@ -173,7 +158,13 @@ abstract class ModuleController extends AbstractBackendModuleController
      */
     abstract protected function getTableNameForLocationRecords();
 
-    abstract protected function mapRequestToBatch($id, array $file, $deleteUnused, $cancelPrevious, Country $country = null): Batch;
+    abstract protected function mapRequestToBatch(
+        $id,
+        array $file,
+        $deleteUnused,
+        $cancelPrevious,
+        Country $country = null
+    ): Batch;
 
     protected function isImportEnabled()
     {

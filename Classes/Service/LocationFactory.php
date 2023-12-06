@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Service;
 
+use Exception;
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
-use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 
+use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Property\Exception\InvalidSourceException;
 
 abstract class LocationFactory
 {
@@ -49,13 +51,12 @@ abstract class LocationFactory
 
     public function __construct()
     {
-        $this->fieldMap = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class)->get($this->fieldMapClassName);
+        $this->fieldMap = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class)->get(
+            $this->fieldMapClassName
+        );
         $this->resetTemplateSheet($this->templateFileName);
     }
 
-    /**
-     * @throws \Exception
-     */
     public function compareHeaderRows()
     {
         $template = $this->getHeaderRowsFromTemplate();
@@ -64,8 +65,8 @@ abstract class LocationFactory
         foreach ($template as $rowIndex => $rowData) {
             foreach ($rowData as $columnIndex => $cellContent) {
                 $coordinate = Coordinate::stringFromColumnIndex($columnIndex) . ($rowIndex + 1);
-                if ($template[$rowIndex][$columnIndex] != $content[$rowIndex][$columnIndex]) {
-                    throw new \Exception(sprintf(
+                if ($template[$rowIndex][$columnIndex] !== $content[$rowIndex][$columnIndex]) {
+                    throw new Exception(sprintf(
                         'Import header doesn\'t match import template at position "%s". Should be "%s" but is "%s".',
                         $coordinate,
                         $template[$rowIndex][$columnIndex],
@@ -90,11 +91,11 @@ abstract class LocationFactory
         );
         $collection = array_filter($collection, [$this, 'containsData']);
         $collection = array_map([$this, 'mapDataRowToTcaRecord'], $collection);
+
         return array_filter($collection, [$this, 'containsData']);
     }
 
     /**
-     * @param array $dataRow
      * @return array
      */
     public function mapDataRowToTcaRecord(array $dataRow)
@@ -105,6 +106,7 @@ abstract class LocationFactory
                 $result[$tcaFieldName] = $dataRow[$tableColumnName];
             }
         }
+
         return $result;
     }
 
@@ -124,10 +126,7 @@ abstract class LocationFactory
     }
 
     /**
-     * @param array $tcaRecord
-     * @param CodingResult|null $codingResult
      * @return array
-     * @throws InvalidSourceException
      */
     public function writeCoordinatesToTcaRecord(array $tcaRecord, CodingResult $codingResult = null)
     {
@@ -135,11 +134,14 @@ abstract class LocationFactory
         foreach ($map as $fieldName) {
             if ($this->fieldMap->__get($fieldName)) {
                 $tcaRecord[$this->fieldMap->__get($fieldName)] = $codingResult->__get($fieldName);
-                if (in_array($fieldName, ['rawData', 'position'])) {
-                    $tcaRecord[$this->fieldMap->__get($fieldName)] = json_encode($tcaRecord[$this->fieldMap->__get($fieldName)]);
+                if (in_array($fieldName, ['rawData', 'position'], true)) {
+                    $tcaRecord[$this->fieldMap->__get($fieldName)] = json_encode(
+                        $tcaRecord[$this->fieldMap->__get($fieldName)]
+                    );
                 }
             }
         }
+
         return $tcaRecord;
     }
 
@@ -156,7 +158,8 @@ abstract class LocationFactory
      */
     protected function getDataRange()
     {
-        $firstContentRow = max(... array_keys($this->getHeaderRowsFromTemplate())) + 2;
+        $firstContentRow = max(...array_keys($this->getHeaderRowsFromTemplate())) + 2;
+
         return sprintf(
             'A%d:%s%d',
             $firstContentRow,
@@ -175,7 +178,7 @@ abstract class LocationFactory
      */
     protected function getHeaderRowsFromTemplate()
     {
-        return array_filter($this->templateSheet->toArray(), function(array $rowData) {
+        return array_filter($this->templateSheet->toArray(), function (array $rowData) {
             return self::containsData($rowData);
         });
     }

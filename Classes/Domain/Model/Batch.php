@@ -1,14 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Domain\Model;
 
+use DateTime;
 use Exception;
 use Netlogix\Nxgooglelocations\Service\BackendUserImpersonator;
 use Netlogix\Nxgooglelocations\Service\GeoCoder;
 use Netlogix\Nxgooglelocations\Service\Importer;
 use Netlogix\Nxgooglelocations\Service\LocationFactory;
-use PhpOffice\PhpSpreadsheet\Exception as SpreadsheetException;
-use PhpOffice\PhpSpreadsheet\Reader\Exception as ReaderException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Annotation\ORM as TYPO3;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
@@ -16,11 +17,15 @@ use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 class Batch extends AbstractEntity
 {
-    const STATE_NEW = 'new';
-    const STATE_VALIDATING = 'validating';
-    const STATE_GEOCODING = 'running';
-    const STATE_PERSISTING = 'persisting';
-    const STATE_CLOSED = 'closed';
+    public const STATE_NEW = 'new';
+
+    public const STATE_VALIDATING = 'validating';
+
+    public const STATE_GEOCODING = 'running';
+
+    public const STATE_PERSISTING = 'persisting';
+
+    public const STATE_CLOSED = 'closed';
 
     /**
      * @var string
@@ -108,7 +113,7 @@ class Batch extends AbstractEntity
     protected $geocodingRequests = 0;
 
     /**
-     * @var \DateTime
+     * @var DateTime
      */
     protected $tstamp;
 
@@ -152,11 +157,6 @@ class Batch extends AbstractEntity
         return $this->fileName;
     }
 
-    /**
-     * @param callable|null $callback
-     * @throws SpreadsheetException
-     * @throws ReaderException
-     */
     public function run(callable $callback = null)
     {
         $this->callback = $callback;
@@ -170,11 +170,6 @@ class Batch extends AbstractEntity
         $this->callback = null;
     }
 
-    /**
-     * @throws SpreadsheetException
-     * @throws ReaderException
-     * @throws Exception
-     */
     public function validate()
     {
         $filePath = $this->getTemporaryFilePath();
@@ -215,22 +210,21 @@ class Batch extends AbstractEntity
 
     protected function getTemporaryFilePath()
     {
-        $filePath = GeneralUtility::tempnam(
-            'location-batch-',
-            pathinfo($this->fileName, PATHINFO_EXTENSION)
-        );
+        $filePath = GeneralUtility::tempnam('location-batch-', pathinfo($this->fileName, PATHINFO_EXTENSION));
         GeneralUtility::writeFileToTypo3tempDir($filePath, $this->getFileContent());
+
         return $filePath;
     }
 
     protected function getFileContent(): string
     {
-        return base64_decode($this->fileContent);
+        return base64_decode($this->fileContent, true);
     }
 
     protected function collectTcaRecords()
     {
-        $tcaRecords = $this->getLocationFactory()->getRecordsForValidRows();
+        $tcaRecords = $this->getLocationFactory()
+            ->getRecordsForValidRows();
         $this->setAmountAndResetPosition(count($tcaRecords));
 
         $position = 0;
@@ -244,35 +238,27 @@ class Batch extends AbstractEntity
 
     protected function executeDataHandler($tcaRecords)
     {
-        $backendUserId = (int)$this->backendUserId;
-        $storagePageId = (int)$this->storagePageId;
-        $deleteUnused = (bool)$this->deleteUnused;
+        $backendUserId = (int) $this->backendUserId;
+        $storagePageId = (int) $this->storagePageId;
+        $deleteUnused = (bool) $this->deleteUnused;
 
         $importer = $this->getImporter();
 
-        $recordTableName = $this->getLocationFactory()->getRecordTableName();
+        $recordTableName = $this->getLocationFactory()
+            ->getRecordTableName();
 
         $this->impersonator->runAsBackendUser(
             $backendUserId,
             static function () use ($importer, $recordTableName, $tcaRecords, $storagePageId, $deleteUnused) {
-                $recordUids = $importer->import(
-                    $recordTableName,
-                    $storagePageId,
-                    $tcaRecords
-                );
+                $recordUids = $importer->import($recordTableName, $storagePageId, $tcaRecords);
                 if ($deleteUnused) {
-                    $importer->removeRecordsExcept(
-                        $recordTableName,
-                        $storagePageId,
-                        ... $recordUids
-                    );
+                    $importer->removeRecordsExcept($recordTableName, $storagePageId, ...$recordUids);
                 }
             }
         );
     }
 
     /**
-     * @param $tcaRecord
      * @return array
      */
     protected function mapTcaRecord($tcaRecord)
@@ -281,15 +267,12 @@ class Batch extends AbstractEntity
         $factory = $this->getLocationFactory();
         $coder = $this->getGeoCoder();
 
-        $tcaRecord = $importer->writeExistingIdentifierToTcaRecord(
-            $factory->getRecordTableName(),
-            $tcaRecord
-        );
+        $tcaRecord = $importer->writeExistingIdentifierToTcaRecord($factory->getRecordTableName(), $tcaRecord);
         if (!$coder->needsToBeGeoCoded($tcaRecord)) {
             $tcaRecord = $coder->setProbabilityToManually($tcaRecord);
         }
 
-        $existingRecord = (array)$importer->getExistingRecord(
+        $existingRecord = (array) $importer->getExistingRecord(
             $factory->getRecordTableName(),
             $this->storagePageId,
             $tcaRecord
@@ -299,10 +282,7 @@ class Batch extends AbstractEntity
             && !$coder->needsToBeGeoCoded($existingRecord)
             && $coder->getGeoCodingAddress($tcaRecord) === $coder->getGeoCodingAddress($existingRecord)
         ) {
-            $tcaRecord = $importer->writeExistingCoordinatesToTcaRecord(
-                $factory->getRecordTableName(),
-                $tcaRecord
-            );
+            $tcaRecord = $importer->writeExistingCoordinatesToTcaRecord($factory->getRecordTableName(), $tcaRecord);
         }
 
         if ($coder->needsToBeGeoCoded($tcaRecord)) {
@@ -311,8 +291,7 @@ class Batch extends AbstractEntity
                 $geoCodingAddress = $coder->getGeoCodingAddress($tcaRecord);
                 $codingResult = $coder->fetchCoordinatesForAddress($geoCodingAddress);
                 $tcaRecord = $factory->writeCoordinatesToTcaRecord($tcaRecord, $codingResult);
-            } catch (\Exception $e) {
-
+            } catch (Exception $e) {
             }
         }
 
@@ -322,18 +301,21 @@ class Batch extends AbstractEntity
     protected function getGeoCoder()
     {
         $this->initializeServices();
+
         return $this->geoCoder;
     }
 
     protected function getImporter()
     {
         $this->initializeServices();
+
         return $this->importer;
     }
 
     protected function getLocationFactory()
     {
         $this->initializeServices();
+
         return $this->locationFactory;
     }
 

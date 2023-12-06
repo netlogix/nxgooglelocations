@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Service;
 
+use Exception;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
@@ -22,7 +25,7 @@ abstract class Importer
     /**
      * @var class-string
      */
-    const FIELD_MAP_CLASSNAME = FieldMap::class;
+    public const FIELD_MAP_CLASSNAME = FieldMap::class;
 
     /**
      * @param int $storagePageId
@@ -32,12 +35,8 @@ abstract class Importer
         $this->storagePageId = $storagePageId;
         $this->fieldMap = GeneralUtility::makeInstance(static::FIELD_MAP_CLASSNAME);
         if (!($this->fieldMap instanceof FieldMap)) {
-            throw new \Exception(
-                sprintf(
-                    'Field map must be of type %s, %s given.',
-                    FieldMap::class,
-                    static::FIELD_MAP_CLASSNAME
-                ),
+            throw new Exception(
+                sprintf('Field map must be of type %s, %s given.', FieldMap::class, static::FIELD_MAP_CLASSNAME),
                 1635428593
             );
         }
@@ -51,8 +50,12 @@ abstract class Importer
      */
     public function import($recordTableName, $storagePageId, $tcaRecords)
     {
-        $data = [$recordTableName => []];
-        $commands = [$recordTableName => []];
+        $data = [
+            $recordTableName => [],
+        ];
+        $commands = [
+            $recordTableName => [],
+        ];
 
         $count = 0;
         foreach ($tcaRecords as $tcaRecord) {
@@ -69,17 +72,13 @@ abstract class Importer
         $dataHandler->process_cmdmap();
 
         return array_map(function ($uid) use ($dataHandler) {
-            return (int)(array_key_exists($uid,
-                $dataHandler->substNEWwithIDs) ? $dataHandler->substNEWwithIDs[$uid] : $uid);
+            return (int) (array_key_exists(
+                $uid,
+                $dataHandler->substNEWwithIDs
+            ) ? $dataHandler->substNEWwithIDs[$uid] : $uid);
         }, array_keys($data[$recordTableName]));
     }
 
-    /**
-     * @param string $recordTableName
-     * @param int $storagePageId
-     * @param int ...$recordUids
-     * @throws \Doctrine\DBAL\Driver\Exception
-     */
     public function removeRecordsExcept(string $recordTableName, int $storagePageId, int ...$recordUids): void
     {
         $recordUids[] = 0;
@@ -91,14 +90,13 @@ abstract class Importer
         $delinquens = $query
             ->select('uid')
             ->from($recordTableName)
-            ->where(
-                $expr->eq('pid', $storagePageId),
-                $expr->notIn('uid', $recordUids)
-            )
+            ->where($expr->eq('pid', $storagePageId), $expr->notIn('uid', $recordUids))
             ->execute()
             ->fetchFirstColumn();
 
-        $commands = [$recordTableName => []];
+        $commands = [
+            $recordTableName => [],
+        ];
         foreach ($delinquens as $delinquentUid) {
             $commands[$recordTableName][$delinquentUid]['delete'] = 1;
         }
@@ -111,7 +109,6 @@ abstract class Importer
 
     /**
      * @param string $recordTableName
-     * @param array $tcaRecord
      * @return array
      */
     public function writeExistingIdentifierToTcaRecord($recordTableName, array $tcaRecord)
@@ -120,12 +117,12 @@ abstract class Importer
         if ($existingRecord) {
             $tcaRecord['uid'] = $existingRecord['uid'];
         }
+
         return $tcaRecord;
     }
 
     /**
      * @param string $recordTableName
-     * @param array $tcaRecord
      * @return array
      */
     public function writeExistingCoordinatesToTcaRecord($recordTableName, array $tcaRecord)
@@ -135,14 +132,9 @@ abstract class Importer
             $tcaRecord[$this->fieldMap->latitude] = $existingRecord[$this->fieldMap->latitude];
             $tcaRecord[$this->fieldMap->longitude] = $existingRecord[$this->fieldMap->longitude];
         }
+
         return $tcaRecord;
     }
 
-    /**
-     * @param string $recordTableName
-     * @param int $storagePageId
-     * @param array $tcaRecord
-     * @return array|null
-     */
     abstract public function getExistingRecord(string $recordTableName, int $storagePageId, array $tcaRecord): ?array;
 }

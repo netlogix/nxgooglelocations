@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Service;
 
 use TYPO3\CMS\Backend\Configuration\TypoScript\ConditionMatching\ConditionMatcher as BackendConditionMatcher;
@@ -17,7 +19,6 @@ class FrontendSettingsForBackendProvider
     protected static $configurationCache = [];
 
     /**
-     * @param int $pageId
      * @return array<string, mixed>
      */
     public static function getConfigurationForPageId(int $pageId): array
@@ -46,7 +47,6 @@ class FrontendSettingsForBackendProvider
     }
 
     /**
-     * @param int $pageId
      * @param array<int, array<string, mixed>> $rootline
      */
     protected static function prepareFrontendConditionMatcher(int $pageId, array $rootline): void
@@ -59,7 +59,6 @@ class FrontendSettingsForBackendProvider
     }
 
     /**
-     * @param int $pageId
      * @param array<int, array<string, mixed>> $rootline
      */
     protected static function prepareBackendConfigurationManager(int $pageId, array $rootline): void
