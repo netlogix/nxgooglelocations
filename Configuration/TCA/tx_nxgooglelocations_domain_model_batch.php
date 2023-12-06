@@ -1,7 +1,6 @@
 <?php
 
-
-defined('TYPO3_MODE') or die();
+defined('TYPO3') or die();
 
 $_EXTKEY = 'nxgooglelocations';
 $LLL = 'LLL:EXT:nxgooglelocations/Resources/Private/Language/locallang_db.xlf:tx_nxgooglelocations_domain_model_batch';
