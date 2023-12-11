@@ -34,7 +34,7 @@ class BatchCommand extends Command
 
         $batch = $batchRepository->findOneByState(Batch::STATE_NEW);
         if (!$batch instanceof Batch) {
-            return 0;
+            return Command::SUCCESS;
         }
 
         $batch->run(static function ($batch, $amount, $position, $state) use (
@@ -45,7 +45,7 @@ class BatchCommand extends Command
             $persistenceManager->persistAll();
         });
 
-        return 0;
+        return Command::SUCCESS;
     }
 
     public function getDatabaseConnection(): Connection
