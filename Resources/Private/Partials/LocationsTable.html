@@ -1,12 +1,11 @@
 <html data-namespace-typo3-fluid="true"
-	  xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
-	  xmlns:nxgl="http://typo3.org/ns/Netlogix/Nxgooglelocations/ViewHelpers">
+	  xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
 <h2>
 	<f:translate key="module.dealers" extensionName="{localLangExtensionName}"/>
 </h2>
 
-<nxgl:be.tableList tableName="{locations.tableName}" storagePid="{id}" readOnly="1" fieldList="{locations.fieldList}">
+<f:be.tableList tableName="{locations.tableName}" storagePid="{id}" readOnly="1" fieldList="{locations.fieldList}">
 	<div class="alert alert-info">
 		<div class="media">
 			<div class="media-left">
@@ -22,6 +21,6 @@
 			</div>
 		</div>
 	</div>
-</nxgl:be.tableList>
+</f:be.tableList>
 
 </html>
