@@ -25,7 +25,7 @@ class DistanceQueryFactory
     /**
      * @var string
      */
-    final public const QUERY_TEMPLATE = <<<'MySQL'
+    final public const QUERY_TEMPLATE = <<<MySQL
 		(
 			{distanceFactor}
 			* ACOS(
