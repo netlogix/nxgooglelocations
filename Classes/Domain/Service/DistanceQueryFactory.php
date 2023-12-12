@@ -70,7 +70,7 @@ MySQL;
             ->orderBy($distanceAs);
         QueryBuilder::addUnquotedSelect(
             $query,
-            $this->getDistanceQueryAttribute($latitude, $longitude, $cleanedDistanceFactor, $distanceAs)
+            [$this->getDistanceQueryAttribute($latitude, $longitude, $cleanedDistanceFactor, $distanceAs)]
         );
 
         return $query;
