@@ -5,16 +5,12 @@ declare(strict_types=1);
 namespace Netlogix\Nxgooglelocations\Domain\Repository;
 
 use TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings;
-use function func_get_args;
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
-/**
- * @method null|Batch findOneByState(string $state)
- */
 class BatchRepository extends Repository
 {
     public function initializeObject(): void
@@ -25,11 +21,7 @@ class BatchRepository extends Repository
         $this->setDefaultQuerySettings($querySettings);
     }
 
-    /**
-     * @param int $storagePageId
-     * @return QueryResultInterface<Batch>
-     */
-    public function findOpenInFolder($storagePageId)
+    public function findOpenInFolder(int $storagePageId): QueryResultInterface
     {
         $query = $this->createQuery();
 
@@ -46,6 +38,6 @@ class BatchRepository extends Repository
 
     public function findOneByState(string $state): ?Batch
     {
-        return $this->__call(__FUNCTION__, func_get_args());
+        return $this->findOneBy(['state' => $state]);
     }
 }

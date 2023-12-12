@@ -9,7 +9,7 @@ use TYPO3\CMS\Extbase\Property\Exception\InvalidSourceException;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
 /**
- * An accessible data structure for Google Geocoding results.
+ * An accessible data structure for Google geocoding results.
  *
  * @property array rawData
  * @property string status
@@ -37,9 +37,9 @@ class CodingResult
      */
     final public const PROBABILITY_MANUALLY_EDITOR = -256;
 
-    protected $minProbability = 0;
+    protected int $minProbability = 0;
 
-    protected $maxProbability = 10;
+    protected int $maxProbability = 10;
 
     public function __construct(
         protected array $rawData

@@ -32,21 +32,15 @@ abstract class LocationFactory
      */
     protected $recordTableName = '';
 
-    /**
-     * @var array<string>
-     */
-    protected $columnNameMap = [
+    protected array $columnNameMap = [
         'A' => 'title',
         'B' => 'address',
-        'C' => 'alterantive_address',
+        'C' => 'alternative_address',
         'D' => 'latitude',
         'E' => 'longitude',
     ];
 
-    /**
-     * @var Worksheet
-     */
-    protected $templateSheet;
+    protected ?Worksheet $templateSheet;
 
     public function __construct()
     {
@@ -54,7 +48,7 @@ abstract class LocationFactory
         $this->resetTemplateSheet($this->templateFileName);
     }
 
-    public function compareHeaderRows()
+    public function compareHeaderRows(): void
     {
         $template = $this->getHeaderRowsFromTemplate();
         $content = $this->contentSheet->toArray();
@@ -74,10 +68,7 @@ abstract class LocationFactory
         }
     }
 
-    /**
-     * @return array
-     */
-    public function getRecordsForValidRows()
+    public function getRecordsForValidRows(): array
     {
         $collection = $this->contentSheet->rangeToArray(
             $this->getDataRange(),
@@ -92,10 +83,7 @@ abstract class LocationFactory
         return array_filter($collection, $this->containsData(...));
     }
 
-    /**
-     * @return array
-     */
-    public function mapDataRowToTcaRecord(array $dataRow)
+    public function mapDataRowToTcaRecord(array $dataRow): array
     {
         $result = [];
         foreach ($this->columnNameMap as $tableColumnName => $tcaFieldName) {
@@ -107,10 +95,7 @@ abstract class LocationFactory
         return $result;
     }
 
-    /**
-     * @return bool
-     */
-    public static function containsData(mixed $list)
+    public static function containsData(mixed $list): bool
     {
         return (bool) array_filter($list, static function ($field): bool {
             if (is_array($field)) {
@@ -121,10 +106,7 @@ abstract class LocationFactory
         });
     }
 
-    /**
-     * @return array
-     */
-    public function writeCoordinatesToTcaRecord(array $tcaRecord, CodingResult $codingResult = null)
+    public function writeCoordinatesToTcaRecord(array $tcaRecord, CodingResult $codingResult = null): array
     {
         $map = ['rawData', 'addressResultFromGeocoding', 'latitude', 'longitude', 'position', 'probability'];
         foreach ($map as $fieldName) {
@@ -142,18 +124,12 @@ abstract class LocationFactory
         return $tcaRecord;
     }
 
-    /**
-     * @return string
-     */
-    public function getRecordTableName()
+    public function getRecordTableName(): string
     {
         return $this->recordTableName;
     }
 
-    /**
-     * @return string
-     */
-    protected function getDataRange()
+    protected function getDataRange(): string
     {
         $firstContentRow = max(...array_keys($this->getHeaderRowsFromTemplate())) + 2;
 
@@ -166,14 +142,12 @@ abstract class LocationFactory
     }
 
     /**
-     * The Sheet::getHighestRow() consumes excel meta data. If there's an empty line
+     * The Sheet::getHighestRow() consumes excel metadata. If there's an empty line
      * that has been touched in any way before, e.g. by placing the cursor in it before
      * saving, this line gets counted as well.
      * This function actually counts non-empty lines.
-     *
-     * @return array
      */
-    protected function getHeaderRowsFromTemplate()
+    protected function getHeaderRowsFromTemplate(): array
     {
         return array_filter(
             $this->templateSheet->toArray(),

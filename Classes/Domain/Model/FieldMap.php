@@ -16,7 +16,7 @@ namespace Netlogix\Nxgooglelocations\Domain\Model;
  */
 abstract class FieldMap
 {
-    protected $fieldMap = [
+    protected array $fieldMap = [
         'rawData' => 'tx_nxgooglelocations_raw_data',
         'addressToDisplay' => 'tx_nxgooglelocations_display_address',
         'addressToGeocode' => 'tx_nxgooglelocations_geocoding_address',
@@ -27,7 +27,7 @@ abstract class FieldMap
         'probability' => 'tx_nxgooglelocations_probability',
     ];
 
-    public function __get($propertyName)
+    public function __get($propertyName): string
     {
         return $this->fieldMap[$propertyName];
     }

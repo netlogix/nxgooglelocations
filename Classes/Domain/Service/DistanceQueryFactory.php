@@ -57,7 +57,7 @@ MySQL;
     public function getDistanceQuery(
         float $latitude,
         float $longitude,
-        $distanceFactor,
+        int|string $distanceFactor,
         string $distanceAs = 'distance'
     ): CoreQueryBuilder {
         $cleanedDistanceFactor = $this->cleanDistanceFactor($distanceFactor);

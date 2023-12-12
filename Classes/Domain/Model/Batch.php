@@ -49,29 +49,17 @@ class Batch extends AbstractEntity
 
     protected bool $deleteUnused;
 
-    /**
-     * @var BackendUserImpersonator
-     */
     #[TYPO3\Transient]
-    protected $impersonator;
+    protected ?BackendUserImpersonator $impersonator = null;
 
-    /**
-     * @var GeoCoder
-     */
     #[TYPO3\Transient]
-    protected $geoCoder;
+    protected ?GeoCoder $geoCoder = null;
 
-    /**
-     * @var Importer
-     */
     #[TYPO3\Transient]
-    protected $importer;
+    protected ?Importer $importer = null;
 
-    /**
-     * @var LocationFactory
-     */
     #[TYPO3\Transient]
-    protected $locationFactory;
+    protected ?LocationFactory $locationFactory = null;
 
     /**
      * @var callable
@@ -79,33 +67,18 @@ class Batch extends AbstractEntity
     #[TYPO3\Transient]
     protected $callback;
 
-    /**
-     * @var string
-     */
-    protected $state = self::STATE_NEW;
+    protected string $state = self::STATE_NEW;
+
+    protected int $amount = 0;
+
+    protected int $position = 0;
+
+    protected int $geocodingRequests = 0;
+
+    protected ?DateTime $tstamp;
 
     /**
-     * @var int
-     */
-    protected $amount = 0;
-
-    /**
-     * @var int
-     */
-    protected $position = 0;
-
-    /**
-     * @var int
-     */
-    protected $geocodingRequests = 0;
-
-    /**
-     * @var DateTime
-     */
-    protected $tstamp;
-
-    /**
-     * @var array<string>
+     * @var string[]
      */
     #[TYPO3\Transient]
     protected $serviceClasses = [
@@ -114,21 +87,13 @@ class Batch extends AbstractEntity
         LocationFactory::class => LocationFactory::class,
     ];
 
-    /**
-     * @param string $apiKey
-     * @param int $storagePageId
-     * @param int $backendUserId
-     * @param string $filePath
-     * @param string $fileName
-     * @param bool $deleteUnused
-     */
     public function __construct(
-        protected $apiKey,
-        protected $storagePageId,
-        protected $backendUserId,
-        $filePath,
-        $fileName = '',
-        $deleteUnused = true
+        protected string $apiKey,
+        protected int $storagePageId,
+        protected int $backendUserId,
+        string $filePath,
+        string $fileName = '',
+        bool $deleteUnused = true
     ) {
         $this->fileName = pathinfo($fileName ?: $filePath, PATHINFO_BASENAME);
         $this->fileContent = base64_encode(file_get_contents(GeneralUtility::getFileAbsFileName($filePath)));
@@ -168,31 +133,31 @@ class Batch extends AbstractEntity
         $this->setState(self::STATE_CLOSED);
     }
 
-    protected function setState($state)
+    protected function setState(string $state): void
     {
         $this->state = $state;
         $this->emitStateChange();
     }
 
-    protected function setAmountAndResetPosition($amount)
+    protected function setAmountAndResetPosition(int $amount): void
     {
         $this->amount = $amount;
         $this->position = 0;
         $this->emitStateChange();
     }
 
-    protected function setPosition($position)
+    protected function setPosition(int $position): void
     {
         $this->position = $position;
         $this->emitStateChange();
     }
 
-    protected function emitStateChange()
+    protected function emitStateChange(): void
     {
         $this->callback && call_user_func($this->callback, $this, $this->amount, $this->position, $this->state);
     }
 
-    protected function getTemporaryFilePath()
+    protected function getTemporaryFilePath(): string
     {
         $filePath = GeneralUtility::tempnam('location-batch-', pathinfo($this->fileName, PATHINFO_EXTENSION));
         GeneralUtility::writeFileToTypo3tempDir($filePath, $this->getFileContent());
@@ -205,7 +170,7 @@ class Batch extends AbstractEntity
         return base64_decode($this->fileContent, true);
     }
 
-    protected function collectTcaRecords()
+    protected function collectTcaRecords(): array
     {
         $tcaRecords = $this->getLocationFactory()
             ->getRecordsForValidRows();
@@ -220,7 +185,7 @@ class Batch extends AbstractEntity
         return $tcaRecords;
     }
 
-    protected function executeDataHandler($tcaRecords)
+    protected function executeDataHandler($tcaRecords): void
     {
         $backendUserId = (int) $this->backendUserId;
         $storagePageId = (int) $this->storagePageId;
@@ -242,10 +207,7 @@ class Batch extends AbstractEntity
         );
     }
 
-    /**
-     * @return array
-     */
-    protected function mapTcaRecord($tcaRecord)
+    protected function mapTcaRecord($tcaRecord): array
     {
         $importer = $this->getImporter();
         $factory = $this->getLocationFactory();
@@ -282,28 +244,28 @@ class Batch extends AbstractEntity
         return $tcaRecord;
     }
 
-    protected function getGeoCoder()
+    protected function getGeoCoder(): GeoCoder
     {
         $this->initializeServices();
 
         return $this->geoCoder;
     }
 
-    protected function getImporter()
+    protected function getImporter(): Importer
     {
         $this->initializeServices();
 
         return $this->importer;
     }
 
-    protected function getLocationFactory()
+    protected function getLocationFactory(): LocationFactory
     {
         $this->initializeServices();
 
         return $this->locationFactory;
     }
 
-    protected function initializeServices()
+    protected function initializeServices(): void
     {
         if (!$this->impersonator) {
             $this->impersonator = GeneralUtility::makeInstance(BackendUserImpersonator::class);

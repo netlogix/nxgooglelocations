@@ -12,21 +12,15 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 abstract class Importer
 {
-    /**
-     * @var FieldMap
-     */
-    protected static $fieldMap;
+    protected ?FieldMap $fieldMap;
 
     /**
      * @var class-string
      */
     public const FIELD_MAP_CLASSNAME = FieldMap::class;
 
-    /**
-     * @param int $storagePageId
-     */
     public function __construct(
-        protected $storagePageId
+        protected int $storagePageId
     ) {
         $this->fieldMap = GeneralUtility::makeInstance(static::FIELD_MAP_CLASSNAME);
         if (!($this->fieldMap instanceof FieldMap)) {
@@ -37,13 +31,7 @@ abstract class Importer
         }
     }
 
-    /**
-     * @param string $recordTableName
-     * @param int $storagePageId
-     * @param array $tcaRecords
-     * @return array<int>
-     */
-    public function import($recordTableName, $storagePageId, $tcaRecords)
+    public function import(string $recordTableName, int $storagePageId, array $tcaRecords): array
     {
         $data = [
             $recordTableName => [],
@@ -100,10 +88,7 @@ abstract class Importer
         $dataHandler->process_cmdmap();
     }
 
-    /**
-     * @return array
-     */
-    public function writeExistingIdentifierToTcaRecord(string $recordTableName, array $tcaRecord)
+    public function writeExistingIdentifierToTcaRecord(string $recordTableName, array $tcaRecord): array
     {
         $existingRecord = $this->getExistingRecord($recordTableName, $this->storagePageId, $tcaRecord);
         if ($existingRecord) {
@@ -113,10 +98,7 @@ abstract class Importer
         return $tcaRecord;
     }
 
-    /**
-     * @return array
-     */
-    public function writeExistingCoordinatesToTcaRecord(string $recordTableName, array $tcaRecord)
+    public function writeExistingCoordinatesToTcaRecord(string $recordTableName, array $tcaRecord): array
     {
         $existingRecord = $this->getExistingRecord($recordTableName, $this->storagePageId, $tcaRecord);
         if ($existingRecord) {

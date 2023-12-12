@@ -39,26 +39,17 @@ abstract class GeoCoder
 
     /**
      * The number of geocoding results must be lower than this in order to make an existing
-     * record count as "doesn't need to be geocoded"
-     *
-     * @var int
+     * record count as "doesn't need to be geocoded".
      */
-    protected $probabilityThreshold = 1;
+    protected int $probabilityThreshold = 1;
 
-    /**
-     * @param string $apiKey
-     */
     public function __construct(
-        protected $apiKey
+        protected string $apiKey
     ) {
         $this->fieldMap = GeneralUtility::makeInstance($this->fieldMapClassName);
     }
 
-    /**+
-     * @param array $tcaRecord
-     * @return string
-     */
-    public function getGeoCodingAddress(array $tcaRecord)
+    public function getGeoCodingAddress(array $tcaRecord): string
     {
         return $tcaRecord[$this->fieldMap->addressToGeocode] ?: $tcaRecord[$this->fieldMap->addressToDisplay];
     }
@@ -68,10 +59,7 @@ abstract class GeoCoder
         return (!$tcaRecord[$this->fieldMap->latitude] && !$tcaRecord[$this->fieldMap->longitude]) || ($tcaRecord[$this->fieldMap->probability] > $this->probabilityThreshold);
     }
 
-    /**
-     * @return array
-     */
-    public function setProbabilityToManually(array $tcaRecord)
+    public function setProbabilityToManually(array $tcaRecord): array
     {
         $tcaRecord[$this->fieldMap->probability] = CodingResult::PROBABILITY_MANUALLY_IMPORT;
 
@@ -80,10 +68,8 @@ abstract class GeoCoder
 
     /**
      * TODO: Add some caching
-     *
-     * @return CodingResult
      */
-    public function fetchCoordinatesForAddress($address)
+    public function fetchCoordinatesForAddress($address): CodingResult
     {
         $urlWithApiKey = sprintf(self::FETCH_URL, urlencode((string) $address), urlencode($this->apiKey));
         $geocode = json_decode((string) GeneralUtility::getUrl($urlWithApiKey), true, 512, JSON_THROW_ON_ERROR);
@@ -101,7 +87,7 @@ abstract class GeoCoder
                     JSON_THROW_ON_ERROR
                 );
 
-                throw new Exception('An error occured: ' . $message);
+                throw new Exception('An error occurred: ' . $message);
         }
     }
 }

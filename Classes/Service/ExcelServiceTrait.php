@@ -11,15 +11,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 trait ExcelServiceTrait
 {
-    /**
-     * @var Worksheet
-     */
-    protected $templateSheet;
-
-    /**
-     * @var Worksheet
-     */
-    protected $contentSheet;
+    protected ?Worksheet $templateSheet;
+    protected ?Worksheet $contentSheet;
 
     public function resetTemplateSheet(string $templateFileName): void
     {
@@ -31,11 +24,7 @@ trait ExcelServiceTrait
         $this->contentSheet = $this->getActiveSheetOfFile($fileName);
     }
 
-    /**
-     * @param string $fileName
-     * @return Worksheet
-     */
-    protected function getActiveSheetOfFile($fileName)
+    protected function getActiveSheetOfFile(string $fileName): Worksheet
     {
         $fileName = GeneralUtility::getFileAbsFileName($fileName);
         $reader = IOFactory::createReaderForFile($fileName);
