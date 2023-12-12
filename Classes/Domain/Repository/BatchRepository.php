@@ -15,8 +15,8 @@ class BatchRepository extends Repository
 {
     public function initializeObject(): void
     {
-        /** @var QuerySettingsInterface $querySettings */
         $querySettings = GeneralUtility::makeInstance(Typo3QuerySettings::class);
+        assert($querySettings instanceof QuerySettingsInterface);
         $querySettings->setRespectStoragePage(false);
         $this->setDefaultQuerySettings($querySettings);
     }
