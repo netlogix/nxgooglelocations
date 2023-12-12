@@ -58,7 +58,7 @@ abstract class Importer
             $uid = array_key_exists('uid', $tcaRecord) ? $tcaRecord['uid']  : sprintf('NEW%s', substr(md5(self::class . $count), 0, 10));
             $data[$recordTableName][$uid] = $tcaRecord;
             $data[$recordTableName][$uid]['pid'] = $storagePageId;
-            $data[$recordTableName][$uid][$GLOBALS['TCA'][$recordTableName]['ctrl']['languageField']] = -1;
+            $data[$recordTableName][$uid]['sys_language_uid'] = -1;
         }
 
         $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
