@@ -8,7 +8,6 @@ use Exception;
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
 abstract class GeoCoder
@@ -52,7 +51,7 @@ abstract class GeoCoder
     public function __construct(
         protected $apiKey
     ) {
-        $this->fieldMap = GeneralUtility::makeInstance(ObjectManager::class)->get($this->fieldMapClassName);
+        $this->fieldMap = GeneralUtility::makeInstance($this->fieldMapClassName);
     }
 
     /**+

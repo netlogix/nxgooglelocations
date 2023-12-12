@@ -15,8 +15,6 @@ use TYPO3\CMS\Extbase\Persistence\Repository;
  */
 class BatchRepository extends Repository
 {
-    public $objectManager;
-
     public function initializeObject(): void
     {
         $defaultQuerySettings = $this->objectManager->get(QuerySettingsInterface::class);

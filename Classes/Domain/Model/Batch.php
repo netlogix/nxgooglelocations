@@ -13,7 +13,6 @@ use Netlogix\Nxgooglelocations\Service\LocationFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Annotation\ORM as TYPO3;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 class Batch extends AbstractEntity
 {
@@ -306,22 +305,20 @@ class Batch extends AbstractEntity
 
     protected function initializeServices()
     {
-        $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
-
         if (!$this->impersonator) {
-            $this->impersonator = $objectManager->get(BackendUserImpersonator::class);
+            $this->impersonator = GeneralUtility::makeInstance(BackendUserImpersonator::class);
         }
 
         if (!$this->geoCoder) {
-            $this->geoCoder = $objectManager->get($this->serviceClasses[GeoCoder::class], $this->apiKey);
+            $this->geoCoder = GeneralUtility::makeInstance($this->serviceClasses[GeoCoder::class], $this->apiKey);
         }
 
         if (!$this->importer) {
-            $this->importer = $objectManager->get($this->serviceClasses[Importer::class], $this->storagePageId);
+            $this->importer = GeneralUtility::makeInstance($this->serviceClasses[Importer::class], $this->storagePageId);
         }
 
         if (!$this->locationFactory) {
-            $this->locationFactory = $objectManager->get($this->serviceClasses[LocationFactory::class]);
+            $this->locationFactory = GeneralUtility::makeInstance($this->serviceClasses[LocationFactory::class]);
         }
     }
 }

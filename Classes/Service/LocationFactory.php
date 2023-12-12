@@ -10,7 +10,6 @@ use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 abstract class LocationFactory
 {
@@ -51,7 +50,7 @@ abstract class LocationFactory
 
     public function __construct()
     {
-        $this->fieldMap = GeneralUtility::makeInstance(ObjectManager::class)->get($this->fieldMapClassName);
+        $this->fieldMap = GeneralUtility::makeInstance($this->fieldMapClassName);
         $this->resetTemplateSheet($this->templateFileName);
     }
 
