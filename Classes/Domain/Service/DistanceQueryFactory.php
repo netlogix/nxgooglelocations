@@ -100,7 +100,7 @@ MySQL;
         return str_replace(array_keys($replace), array_values($replace), self::QUERY_TEMPLATE);
     }
 
-    protected function cleanDistanceFactor($distanceFactor): int
+    protected function cleanDistanceFactor($distanceFactor): ?int
     {
         if (MathUtility::canBeInterpretedAsInteger($distanceFactor)) {
             return (int) $distanceFactor;
@@ -113,6 +113,8 @@ MySQL;
         if (strtolower((string) $distanceFactor) === 'miles' || strtolower((string) $distanceFactor) === 'mi') {
             return self::DISTANCE_FACTOR_FOR_MILES;
         }
+
+        return null;
     }
 
     protected function getConnectionPool(): ConnectionPool
