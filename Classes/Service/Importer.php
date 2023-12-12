@@ -20,7 +20,7 @@ abstract class Importer
     /**
      * @var class-string
      */
-    final public const FIELD_MAP_CLASSNAME = FieldMap::class;
+    public const FIELD_MAP_CLASSNAME = FieldMap::class;
 
     /**
      * @param int $storagePageId
