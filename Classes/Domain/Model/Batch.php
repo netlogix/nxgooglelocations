@@ -236,7 +236,7 @@ class Batch extends AbstractEntity
             static function () use ($importer, $recordTableName, $tcaRecords, $storagePageId, $deleteUnused): void {
                 $recordUids = $importer->import($recordTableName, $storagePageId, $tcaRecords);
                 if ($deleteUnused) {
-                    $importer->removeRecordsExcept($recordTableName, $storagePageId, ...$recordUids);
+                    $importer->removeRecordsExcept($recordTableName, $storagePageId, $recordUids);
                 }
             }
         );
