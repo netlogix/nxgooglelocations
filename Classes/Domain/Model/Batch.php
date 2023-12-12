@@ -163,7 +163,7 @@ class Batch extends AbstractEntity
         $factory->compareHeaderRows();
     }
 
-    public function cancle(): void
+    public function cancel(): void
     {
         $this->setState(self::STATE_CLOSED);
     }
