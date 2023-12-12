@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Netlogix\Nxgooglelocations\Domain\Repository;
 
+use TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings;
 use function func_get_args;
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
@@ -17,10 +19,10 @@ class BatchRepository extends Repository
 {
     public function initializeObject(): void
     {
-        $defaultQuerySettings = $this->objectManager->get(QuerySettingsInterface::class);
-        assert($defaultQuerySettings instanceof QuerySettingsInterface);
-        $defaultQuerySettings->setRespectStoragePage(false);
-        $this->setDefaultQuerySettings($defaultQuerySettings);
+        /** @var QuerySettingsInterface $querySettings */
+        $querySettings = GeneralUtility::makeInstance(Typo3QuerySettings::class);
+        $querySettings->setRespectStoragePage(false);
+        $this->setDefaultQuerySettings($querySettings);
     }
 
     /**
