@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Netlogix\Nxgooglelocations\Service;
 
 use Exception;
-use Netlogix\Nxgooglelocations\Domain\Model\CodingResultProbability;
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
+use Netlogix\Nxgooglelocations\Enumerations\CodingResultProbability;
+use Netlogix\Nxgooglelocations\Enumerations\GeoCoderStatus;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
@@ -52,7 +53,7 @@ abstract class GeoCoder
 
     public function setProbabilityToManually(array $tcaRecord): array
     {
-        $tcaRecord[$this->fieldMap->probability] = CodingResultProbability::MANUALLY_IMPORT->value;
+        $tcaRecord[$this->fieldMap->probability] = CodingResultProbability::MANUALLY_IMPORT;
 
         return $tcaRecord;
     }

@@ -6,6 +6,7 @@ namespace Netlogix\Nxgooglelocations\Domain\Model;
 
 use DateTime;
 use Exception;
+use Netlogix\Nxgooglelocations\Enumerations\BatchState;
 use Netlogix\Nxgooglelocations\Service\BackendUserImpersonator;
 use Netlogix\Nxgooglelocations\Service\GeoCoder;
 use Netlogix\Nxgooglelocations\Service\Importer;
@@ -42,7 +43,7 @@ class Batch extends AbstractEntity
     #[TYPO3\Transient]
     protected $callback;
 
-    protected BatchState $state = BatchState::NEW;
+    protected string $state = BatchState::NEW;
 
     protected int $amount = 0;
 
@@ -108,7 +109,7 @@ class Batch extends AbstractEntity
         $this->setState(BatchState::CLOSED);
     }
 
-    protected function setState(BatchState $state): void
+    protected function setState(string $state): void
     {
         $this->state = $state;
         $this->emitStateChange();
