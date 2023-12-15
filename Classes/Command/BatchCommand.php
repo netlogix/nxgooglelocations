@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Netlogix\Nxgooglelocations\Command;
 
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
-use Netlogix\Nxgooglelocations\Domain\Model\BatchState;
 use Netlogix\Nxgooglelocations\Domain\Repository\BatchRepository;
+use Netlogix\Nxgooglelocations\Enumerations\BatchState;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
