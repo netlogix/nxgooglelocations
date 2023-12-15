@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Netlogix\Nxgooglelocations\Command;
 
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
+use Netlogix\Nxgooglelocations\Domain\Model\BatchState;
 use Netlogix\Nxgooglelocations\Domain\Repository\BatchRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -32,7 +33,7 @@ class BatchCommand extends Command
         $this->getDatabaseConnection()
             ->executeStatement('SET SESSION wait_timeout = 3600');
 
-        $batch = $batchRepository->findOneByState(Batch::STATE_NEW);
+        $batch = $batchRepository->findOneByState(BatchState::NEW);
         if (!$batch instanceof Batch) {
             return Command::SUCCESS;
         }

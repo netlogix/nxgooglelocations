@@ -16,31 +16,6 @@ use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 
 class Batch extends AbstractEntity
 {
-    /**
-     * @var string
-     */
-    final public const STATE_NEW = 'new';
-
-    /**
-     * @var string
-     */
-    final public const STATE_VALIDATING = 'validating';
-
-    /**
-     * @var string
-     */
-    final public const STATE_GEOCODING = 'running';
-
-    /**
-     * @var string
-     */
-    final public const STATE_PERSISTING = 'persisting';
-
-    /**
-     * @var string
-     */
-    final public const STATE_CLOSED = 'closed';
-
     protected string $fileName;
 
     protected string $fileContent;
@@ -67,7 +42,7 @@ class Batch extends AbstractEntity
     #[TYPO3\Transient]
     protected $callback;
 
-    protected string $state = self::STATE_NEW;
+    protected BatchState $state = BatchState::NEW;
 
     protected int $amount = 0;
 
@@ -98,7 +73,7 @@ class Batch extends AbstractEntity
         $this->fileName = pathinfo($fileName ?: $filePath, PATHINFO_BASENAME);
         $this->fileContent = base64_encode(file_get_contents(GeneralUtility::getFileAbsFileName($filePath)));
         $this->fileHash = sha1($this->fileContent);
-        $this->deleteUnused = (bool) $deleteUnused;
+        $this->deleteUnused = $deleteUnused;
     }
 
     public function getFileName(): string
@@ -109,13 +84,13 @@ class Batch extends AbstractEntity
     public function run(callable $callback = null): void
     {
         $this->callback = $callback;
-        $this->setState(self::STATE_VALIDATING);
+        $this->setState(BatchState::VALIDATING);
         $this->validate();
-        $this->setState(self::STATE_GEOCODING);
+        $this->setState(BatchState::GEOCODING);
         $tcaRecords = $this->collectTcaRecords();
-        $this->setState(self::STATE_PERSISTING);
+        $this->setState(BatchState::PERSISTING);
         $this->executeDataHandler($tcaRecords);
-        $this->setState(self::STATE_CLOSED);
+        $this->setState(BatchState::CLOSED);
         $this->callback = null;
     }
 
@@ -130,10 +105,10 @@ class Batch extends AbstractEntity
 
     public function cancel(): void
     {
-        $this->setState(self::STATE_CLOSED);
+        $this->setState(BatchState::CLOSED);
     }
 
-    protected function setState(string $state): void
+    protected function setState(BatchState $state): void
     {
         $this->state = $state;
         $this->emitStateChange();
@@ -187,8 +162,8 @@ class Batch extends AbstractEntity
 
     protected function executeDataHandler($tcaRecords): void
     {
-        $backendUserId = (int) $this->backendUserId;
-        $storagePageId = (int) $this->storagePageId;
+        $backendUserId = $this->backendUserId;
+        $storagePageId = $this->storagePageId;
         $deleteUnused = $this->deleteUnused;
 
         $importer = $this->getImporter();

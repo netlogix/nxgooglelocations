@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Netlogix\Nxgooglelocations\Domain\Model;
 
 use Netlogix\Nxgooglelocations\Service\GeoCoder;
+use Netlogix\Nxgooglelocations\Service\GeoCoderStatus;
 use TYPO3\CMS\Extbase\Property\Exception\InvalidSourceException;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
@@ -12,7 +13,7 @@ use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
  * An accessible data structure for Google geocoding results.
  *
  * @property array rawData
- * @property string status
+ * @property GeoCoderStatus status
  * @property string formattedAddress
  * @property string addressResultFromGeocoding
  * @property float latitude
@@ -22,21 +23,6 @@ use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
  */
 class CodingResult
 {
-    /**
-     * @var int
-     */
-    final public const PROBABILITY_ZERO_RESULTS = -1;
-
-    /**
-     * @var int
-     */
-    final public const PROBABILITY_MANUALLY_IMPORT = -255;
-
-    /**
-     * @var int
-     */
-    final public const PROBABILITY_MANUALLY_EDITOR = -256;
-
     protected int $minProbability = 0;
 
     protected int $maxProbability = 10;
@@ -48,29 +34,22 @@ class CodingResult
 
     public function __get($propertyName)
     {
-        switch ($propertyName) {
-            case 'rawData':
-                return $this->rawData;
-            case 'status':
-                return (string) ObjectAccess::getPropertyPath($this->rawData, 'status');
-            case 'formattedAddress':
-            case 'addressResultFromGeocoding':
-                return (string) ObjectAccess::getPropertyPath($this->rawData, 'results.0.formatted_address');
-            case 'latitude':
-                return (float) ObjectAccess::getPropertyPath($this->rawData, 'results.0.geometry.location.lat');
-            case 'longitude':
-                return (float) ObjectAccess::getPropertyPath($this->rawData, 'results.0.geometry.location.lng');
-            case 'position':
-                return [
-                    'latitude' => $this->latitude,
-                    'longitude' => $this->longitude,
-                ];
-            case 'probability':
-                if ($this->status === GeoCoder::STATUS_ZERO_RESULTS) {
-                    return self::PROBABILITY_ZERO_RESULTS;
-                }
-
-                return max(
+        return match ($propertyName) {
+            'rawData' => $this->rawData,
+            'status' => (string)ObjectAccess::getPropertyPath($this->rawData, 'status'),
+            'formattedAddress', 'addressResultFromGeocoding' => (string)ObjectAccess::getPropertyPath(
+                $this->rawData,
+                'results.0.formatted_address'
+            ),
+            'latitude' => (float)ObjectAccess::getPropertyPath($this->rawData, 'results.0.geometry.location.lat'),
+            'longitude' => (float)ObjectAccess::getPropertyPath($this->rawData, 'results.0.geometry.location.lng'),
+            'position' => [
+                'latitude' => $this->latitude,
+                'longitude' => $this->longitude,
+            ],
+            'probability' => ($this->status === GeoCoderStatus::ZERO_RESULTS)
+                ? CodingResultProbability::ZERO_RESULTS->value
+                : max(
                     $this->minProbability,
                     min(
                         $this->maxProbability,
@@ -78,9 +57,10 @@ class CodingResult
                             ObjectAccess::getPropertyPath($this->rawData, 'results')
                         ) : 0
                     )
-                );
-        }
-
-        throw new InvalidSourceException('There is no property "' . $propertyName . '" in CodingResults.');
+                ),
+            default => throw new InvalidSourceException(
+                'There is no property "' . $propertyName . '" in CodingResults.'
+            ),
+        };
     }
 }

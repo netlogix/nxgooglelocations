@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Netlogix\Nxgooglelocations\Service;
 
 use Exception;
+use Netlogix\Nxgooglelocations\Domain\Model\CodingResultProbability;
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -16,16 +17,6 @@ abstract class GeoCoder
      * @var string
      */
     final public const FETCH_URL = 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s';
-
-    /**
-     * @var string
-     */
-    final public const STATUS_OK = 'OK';
-
-    /**
-     * @var string
-     */
-    final public const STATUS_ZERO_RESULTS = 'ZERO_RESULTS';
 
     /**
      * @var FieldMap
@@ -61,7 +52,7 @@ abstract class GeoCoder
 
     public function setProbabilityToManually(array $tcaRecord): array
     {
-        $tcaRecord[$this->fieldMap->probability] = CodingResult::PROBABILITY_MANUALLY_IMPORT;
+        $tcaRecord[$this->fieldMap->probability] = CodingResultProbability::MANUALLY_IMPORT->value;
 
         return $tcaRecord;
     }
@@ -74,20 +65,17 @@ abstract class GeoCoder
         $urlWithApiKey = sprintf(self::FETCH_URL, urlencode((string) $address), urlencode($this->apiKey));
         $geocode = json_decode((string) GeneralUtility::getUrl($urlWithApiKey), true, 512, JSON_THROW_ON_ERROR);
         $status = ObjectAccess::getPropertyPath($geocode, 'status');
-        switch ($status) {
-            case self::STATUS_OK:
-            case self::STATUS_ZERO_RESULTS:
-                return new CodingResult($geocode);
-            default:
-                $message = json_encode(
+        return match ($status) {
+            GeoCoderStatus::OK, GeoCoderStatus::ZERO_RESULTS => new CodingResult($geocode),
+            default => throw new Exception(
+                'An error occurred: ' . json_encode(
                     array_filter(
                         [$status, ObjectAccess::getPropertyPath($geocode, 'error_message')],
-                        static fn ($value): bool => (bool) $value
+                        static fn($value): bool => (bool)$value
                     ),
                     JSON_THROW_ON_ERROR
-                );
-
-                throw new Exception('An error occurred: ' . $message);
-        }
+                )
+            ),
+        };
     }
 }
