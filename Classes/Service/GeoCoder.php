@@ -1,19 +1,22 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Service;
 
+use Exception;
+use Netlogix\Nxgooglelocations\Domain\Model\CodingResultProbability;
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
 abstract class GeoCoder
 {
-    const FETCH_URL = 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s';
-
-    const STATUS_OK = 'OK';
-
-    const STATUS_ZERO_RESULTS = 'ZERO_RESULTS';
+    /**
+     * @var string
+     */
+    final public const FETCH_URL = 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s';
 
     /**
      * @var FieldMap
@@ -27,73 +30,52 @@ abstract class GeoCoder
 
     /**
      * The number of geocoding results must be lower than this in order to make an existing
-     * record count as "doesn't need to be geocoded"
-     *
-     * @var int
+     * record count as "doesn't need to be geocoded".
      */
-    protected $probabilityThreshold = 1;
+    protected int $probabilityThreshold = 1;
 
-    /**
-     * @var string
-     */
-    protected $apiKey;
-
-    public function __construct($apiKey)
-    {
-        $this->fieldMap = GeneralUtility::makeInstance(ObjectManager::class)->get($this->fieldMapClassName);
-        $this->apiKey = $apiKey;
+    public function __construct(
+        protected string $apiKey
+    ) {
+        $this->fieldMap = GeneralUtility::makeInstance($this->fieldMapClassName);
     }
 
-    /**+
-     * @param array $tcaRecord
-     * @return string
-     */
-    public function getGeoCodingAddress(array $tcaRecord)
+    public function getGeoCodingAddress(array $tcaRecord): string
     {
         return $tcaRecord[$this->fieldMap->addressToGeocode] ?: $tcaRecord[$this->fieldMap->addressToDisplay];
     }
 
-    /**
-     * @param array $tcaRecord
-     * @return bool
-     */
-    public function needsToBeGeoCoded(array $tcaRecord)
+    public function needsToBeGeoCoded(array $tcaRecord): bool
     {
         return (!$tcaRecord[$this->fieldMap->latitude] && !$tcaRecord[$this->fieldMap->longitude]) || ($tcaRecord[$this->fieldMap->probability] > $this->probabilityThreshold);
     }
 
-    /**
-     * @param array $tcaRecord
-     * @return array
-     */
-    public function setProbabilityToManually(array $tcaRecord)
+    public function setProbabilityToManually(array $tcaRecord): array
     {
-        $tcaRecord[$this->fieldMap->probability] = CodingResult::PROBABILITY_MANUALLY_IMPORT;
+        $tcaRecord[$this->fieldMap->probability] = CodingResultProbability::MANUALLY_IMPORT->value;
+
         return $tcaRecord;
     }
 
     /**
      * TODO: Add some caching
-     *
-     * @param $address
-     * @return CodingResult
-     * @throws \Exception
      */
-    public function fetchCoordinatesForAddress($address)
+    public function fetchCoordinatesForAddress($address): CodingResult
     {
-        $urlWithApiKey = sprintf(self::FETCH_URL, urlencode($address), urlencode($this->apiKey));
-        $geocode = json_decode(GeneralUtility::getUrl($urlWithApiKey), true);
+        $urlWithApiKey = sprintf(self::FETCH_URL, urlencode((string) $address), urlencode($this->apiKey));
+        $geocode = json_decode((string) GeneralUtility::getUrl($urlWithApiKey), true, 512, JSON_THROW_ON_ERROR);
         $status = ObjectAccess::getPropertyPath($geocode, 'status');
-        switch ($status) {
-            case self::STATUS_OK:
-                return new CodingResult($geocode);
-            case self::STATUS_ZERO_RESULTS:
-                return new CodingResult($geocode);
-            default:
-                $message = json_encode(array_filter([$status, ObjectAccess::getPropertyPath($geocode, 'error_message')], function ($value) {
-                    return !!$value;
-                }));
-                throw new \Exception('An error occured: ' . $message);
-        }
+        return match ($status) {
+            GeoCoderStatus::OK, GeoCoderStatus::ZERO_RESULTS => new CodingResult($geocode),
+            default => throw new Exception(
+                'An error occurred: ' . json_encode(
+                    array_filter(
+                        [$status, ObjectAccess::getPropertyPath($geocode, 'error_message')],
+                        static fn($value): bool => (bool)$value
+                    ),
+                    JSON_THROW_ON_ERROR
+                )
+            ),
+        };
     }
 }

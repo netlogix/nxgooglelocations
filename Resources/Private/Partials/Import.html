@@ -1,61 +1,67 @@
 <html data-namespace-typo3-fluid="true" xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
 <h2>
-	<f:translate key="module.import" extensionName="{localLangExtensionName}"/>
+    <f:translate key="module.import" extensionName="{localLangExtensionName}"/>
 </h2>
 
 <f:form action="import" enctype="multipart/form-data">
-	<table class="table table-striped table-hover dataTable no-footer" role="grid">
-		<tr role="row" class="odd">
-			<td>
-				<f:translate key="module.import.pick-a-file" extensionName="{localLangExtensionName}"/>
-			</td>
-			<td>
-				<f:form.upload name="file" additionalAttributes="{accept: '.xlsx', required: true}" class="form-control"/>
-			</td>
-		</tr>
+    <div class="table-fit">
+        <table class="table table-striped table-hover dataTable no-footer" role="grid">
+            <tr role="row" class="odd">
+                <td>
+                    <f:translate key="module.import.pick-a-file" extensionName="{localLangExtensionName}"/>
+                </td>
+                <td>
+                    <f:form.upload name="excelFile" additionalAttributes="{accept: '.xlsx', required: true}"
+                                   class="form-control"/>
+                </td>
+            </tr>
 
-		<f:if condition="{allowedCountries}">
-			<f:then>
-				<tr role="row" class="even">
-					<td>
-						<f:translate key="module.import.pick-a-country" extensionName="{localLangExtensionName}"/>
-					</td>
-					<td>
-						<f:form.select name="country" options="{allowedCountries}" optionLabelField="shortNameEn" class="form-control"/>
-					</td>
-				</tr>
-			</f:then>
-			<f:else>
-				<tr role="row" class="even">
-					<td colspan="2">
-						<f:translate key="module.import.no-specific-country" extensionName="{localLangExtensionName}"/>
-				</tr>
-			</f:else>
-		</f:if>
+            <f:if condition="{allowedCountries}">
+                <f:then>
+                    <tr role="row" class="even">
+                        <td>
+                            <f:translate key="module.import.pick-a-country" extensionName="{localLangExtensionName}"/>
+                        </td>
+                        <td>
+                            <f:form.select name="country" options="{allowedCountries}" optionLabelField="shortNameEn"
+                                           class="form-control"/>
+                        </td>
+                    </tr>
+                </f:then>
+                <f:else>
+                    <tr role="row" class="even">
+                        <td colspan="2">
+                            <f:translate key="module.import.no-specific-country"
+                                         extensionName="{localLangExtensionName}"/>
+                    </tr>
+                </f:else>
+            </f:if>
 
-		<tr role="row" class="odd">
-			<td>
-				<f:translate key="module.import.delete-unused" extensionName="{localLangExtensionName}"/>
-			</td>
-			<td>
-				<f:form.checkbox name="deleteUnused" value="deleteUnused" checked="true" class="form-control"/>
-			</td>
-		</tr>
+            <tr role="row" class="odd">
+                <td>
+                    <f:translate key="module.import.delete-unused" extensionName="{localLangExtensionName}"/>
+                </td>
+                <td>
+                    <f:form.checkbox name="deleteUnused" value="deleteUnused" checked="true" class="form-check-input"/>
+                </td>
+            </tr>
 
-		<tr role="row" class="odd">
-			<td>
-				<f:translate key="module.import.cancel-previous" extensionName="{localLangExtensionName}"/>
-			</td>
-			<td>
-				<f:form.checkbox name="cancelPrevious" value="cancelPrevious" checked="true" class="form-control"/>
-			</td>
-		</tr>
+            <tr role="row" class="odd">
+                <td>
+                    <f:translate key="module.import.cancel-previous" extensionName="{localLangExtensionName}"/>
+                </td>
+                <td>
+                    <f:form.checkbox name="cancelPrevious" value="cancelPrevious" checked="true"
+                                     class="form-check-input"/>
+                </td>
+            </tr>
 
-	</table>
-	<button class="btn btn-default btn-save">
-		<f:translate key="module.import.submit-button" extensionName="{localLangExtensionName}"/>
-	</button>
+        </table>
+    </div>
+    <button class="btn btn-default btn-save">
+        <f:translate key="module.import.submit-button" extensionName="{localLangExtensionName}"/>
+    </button>
 </f:form>
 
 </html>

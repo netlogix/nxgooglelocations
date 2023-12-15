@@ -1,7 +1,6 @@
 <?php
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 
-defined('TYPO3_MODE') or die();
+defined('TYPO3') || die();
 
 $_EXTKEY = 'nxgooglelocations';
 $LLL = 'LLL:EXT:nxgooglelocations/Resources/Private/Language/locallang_db.xlf:tx_nxgooglelocations_domain_model_batch';
@@ -13,12 +12,10 @@ $value = [
         'tstamp' => 'tstamp',
         'crdate' => 'crdate',
         'cruser_id' => 'cruser_id',
-        'dividers2tabs' => true,
         'type' => 'type',
         'delete' => 'deleted',
         'default_sortby' => 'tstamp DESC, uid DESC',
-        'enablecolumns' => [
-        ],
+        'enablecolumns' => [],
         'searchFields' => 'file_name',
         'typeicon_column' => 'type',
         'typeicon_classes' => [
@@ -43,7 +40,7 @@ $value = [
                 backend_user_id,
                 file_name,
                 file_hash
-            '
+            ',
         ],
     ],
     'palettes' => [],
@@ -56,7 +53,7 @@ $value = [
                 'renderType' => 'selectSingle',
                 'items' => [],
                 'required' => true,
-            ]
+            ],
         ],
         'tstamp' => [
             'config' => [
@@ -69,17 +66,32 @@ $value = [
             'config' => [
                 'type' => 'select',
                 'items' => [
-                    [$LLL . '.state.I.new', 'new'],
-                    [$LLL . '.state.I.validating', 'validating'],
-                    [$LLL . '.state.I.running', 'running'],
-                    [$LLL . '.state.I.persisting', 'persisting'],
-                    [$LLL . '.state.I.closed', 'closed'],
+                    [
+                        'label' => $LLL . '.state.I.new',
+                        'value' => 'new',
+                    ],
+                    [
+                        'label' => $LLL . '.state.I.validating',
+                        'value' => 'validating',
+                    ],
+                    [
+                        'label' => $LLL . '.state.I.running',
+                        'value' => 'running',
+                    ],
+                    [
+                        'label' => $LLL . '.state.I.persisting',
+                        'value' => 'persisting',
+                    ],
+                    [
+                        'label' => $LLL . '.state.I.closed',
+                        'value' => 'closed',
+                    ],
                 ],
                 'size' => 1,
                 'maxitems' => 1,
                 'renderType' => 'selectSingle',
                 'required' => true,
-            ]
+            ],
         ],
         'delete_unused' => [
             'config' => [
@@ -90,28 +102,28 @@ $value = [
             'config' => [
                 'type' => 'input',
                 'size' => 30,
-                'eval' => 'trim'
+                'eval' => 'trim',
             ],
         ],
         'position' => [
             'config' => [
                 'type' => 'input',
                 'size' => 30,
-                'eval' => 'trim'
+                'eval' => 'trim',
             ],
         ],
         'geocoding_requests' => [
             'config' => [
                 'type' => 'input',
                 'size' => 30,
-                'eval' => 'trim'
+                'eval' => 'trim',
             ],
         ],
         'api_key' => [
             'config' => [
                 'type' => 'input',
                 'size' => 30,
-                'eval' => 'trim'
+                'eval' => 'trim',
             ],
         ],
         'storage_page_id' => [
@@ -143,24 +155,25 @@ $value = [
             'config' => [
                 'type' => 'input',
                 'size' => 30,
-                'eval' => 'trim'
+                'eval' => 'trim',
             ],
         ],
         'file_hash' => [
             'config' => [
                 'type' => 'input',
                 'size' => 30,
-                'eval' => 'trim'
+                'eval' => 'trim',
             ],
         ],
     ],
 ];
 
-foreach ($value['columns'] as $columName => $columnConfig) {
+foreach (array_keys($value['columns']) as $columName) {
     $value['columns'][$columName]['label'] = $LLL . '.' . $columName;
     $value['columns'][$columName]['exclude'] = false;
     $value['columns'][$columName]['config']['readOnly'] = true;
 }
+
 $value['columns']['api_key']['exclude'] = true;
 
 return $value;

@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Command;
 
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
+use Netlogix\Nxgooglelocations\Domain\Model\BatchState;
 use Netlogix\Nxgooglelocations\Domain\Repository\BatchRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,26 +17,15 @@ use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 
 class BatchCommand extends Command
 {
-    protected function configure()
-    {
-        parent::configure();
-        $this->setDescription('Import jobs from a given feed.');
+    public function __construct(
+        private readonly BatchRepository $batchRepository,
+        private readonly PersistenceManagerInterface $persistenceManager,
+        string $name = null
+    ) {
+        parent::__construct($name);
     }
 
-    public function injectBatchRepository(BatchRepository $batchRepository)
-    {
-        $this->batchRepository = $batchRepository;
-    }
-
-    /**
-     * @param PersistenceManagerInterface $persistenceManager
-     */
-    public function injectPersistenceManager(PersistenceManagerInterface $persistenceManager)
-    {
-        $this->persistenceManager = $persistenceManager;
-    }
-
-    public function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $batchRepository = $this->batchRepository;
         $persistenceManager = $this->persistenceManager;
@@ -41,22 +33,25 @@ class BatchCommand extends Command
         $this->getDatabaseConnection()
             ->executeStatement('SET SESSION wait_timeout = 3600');
 
-        $batch = $batchRepository->findOneByState(Batch::STATE_NEW);
+        $batch = $batchRepository->findOneByState(BatchState::NEW);
         if (!$batch instanceof Batch) {
-            return 0;
+            return Command::SUCCESS;
         }
 
-        $batch->run(static function ($batch, $amount, $position, $state) use ($batchRepository, $persistenceManager) {
+        $batch->run(static function ($batch, $amount, $position, $state) use (
+            $batchRepository,
+            $persistenceManager
+        ): void {
             $batchRepository->update($batch);
             $persistenceManager->persistAll();
         });
 
-        return 0;
+        return Command::SUCCESS;
     }
 
     public function getDatabaseConnection(): Connection
     {
-        $pool = GeneralUtility::makeInstance(ConnectionPool::class);
-        return $pool->getConnectionByName(ConnectionPool::DEFAULT_CONNECTION_NAME);
+        return GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getConnectionByName(ConnectionPool::DEFAULT_CONNECTION_NAME);
     }
 }

@@ -1,18 +1,22 @@
 <?php
-defined('TYPO3_MODE') or die();
 
-call_user_func(function () {
+declare(strict_types=1);
 
-    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] = \Netlogix\Nxgooglelocations\Command\BatchCommand::class;
+use Netlogix\Nxgooglelocations\Command\BatchCommand;
+use TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider;
+use TYPO3\CMS\Core\Imaging\IconRegistry;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-    if (TYPO3_MODE === 'BE') {
+defined('TYPO3') || die();
 
-        $iconRegistry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Imaging\IconRegistry::class);
-        $iconRegistry->registerIcon(
-            'ext-nxgooglelocations-batch-type-default',
-            \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
-            ['source' => 'EXT:nxgooglelocations/Resources/Public/Icons/tx_nxgooglelocations_domain_model_batch.svg']
-        );
-    }
+call_user_func(static function (): void {
+    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] = BatchCommand::class;
 
+    GeneralUtility::makeInstance(IconRegistry::class)->registerIcon(
+        'ext-nxgooglelocations-batch-type-default',
+        SvgIconProvider::class,
+        [
+            'source' => 'EXT:nxgooglelocations/Resources/Public/Icons/tx_nxgooglelocations_domain_model_batch.svg',
+        ]
+    );
 });

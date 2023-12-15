@@ -1,27 +1,27 @@
 <html data-namespace-typo3-fluid="true"
-	  xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
-	  xmlns:nxgl="http://typo3.org/ns/Netlogix/Nxgooglelocations/ViewHelpers">
+      xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+      xmlns:nxgl="http://typo3.org/ns/Netlogix/Nxgooglelocations/ViewHelpers">
 
 <h2>
-	<f:translate key="module.batches" extensionName="{localLangExtensionName}"/>
+    <f:translate key="module.batches" extensionName="{localLangExtensionName}"/>
 </h2>
 
 <nxgl:be.tableList tableName="{batches.tableName}" storagePid="{id}" readOnly="1" fieldList="{batches.fieldList}">
-	<div class="alert alert-info">
-		<div class="media">
-			<div class="media-left">
-							<span class="fa-stack fa-lg">
-								<i class="fa fa-circle fa-stack-2x"></i>
-								<i class="fa fa-info fa-stack-1x"></i>
-							</span>
-			</div>
-			<div class="media-body">
-				<div class="alert-message">
-					<f:translate key="module.batches.error-if-no-record" extensionName="{localLangExtensionName}"/>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="alert alert-info">
+        <div class="media">
+            <div class="media-left">
+                <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-info fa-stack-1x"></i>
+                </span>
+            </div>
+            <div class="media-body">
+                <div class="alert-message">
+                    <f:translate key="module.batches.error-if-no-record" extensionName="{localLangExtensionName}"/>
+                </div>
+            </div>
+        </div>
+    </div>
 </nxgl:be.tableList>
 
 </html>

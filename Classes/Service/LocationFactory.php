@@ -1,14 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Service;
 
+use Exception;
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
-
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Property\Exception\InvalidSourceException;
 
 abstract class LocationFactory
 {
@@ -31,32 +32,23 @@ abstract class LocationFactory
      */
     protected $recordTableName = '';
 
-    /**
-     * @var array<string>
-     */
-    protected $columnNameMap = [
+    protected array $columnNameMap = [
         'A' => 'title',
         'B' => 'address',
-        'C' => 'alterantive_address',
+        'C' => 'alternative_address',
         'D' => 'latitude',
         'E' => 'longitude',
     ];
 
-    /**
-     * @var Worksheet
-     */
-    protected $templateSheet;
+    protected ?Worksheet $templateSheet;
 
     public function __construct()
     {
-        $this->fieldMap = GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class)->get($this->fieldMapClassName);
+        $this->fieldMap = GeneralUtility::makeInstance($this->fieldMapClassName);
         $this->resetTemplateSheet($this->templateFileName);
     }
 
-    /**
-     * @throws \Exception
-     */
-    public function compareHeaderRows()
+    public function compareHeaderRows(): void
     {
         $template = $this->getHeaderRowsFromTemplate();
         $content = $this->contentSheet->toArray();
@@ -64,8 +56,8 @@ abstract class LocationFactory
         foreach ($template as $rowIndex => $rowData) {
             foreach ($rowData as $columnIndex => $cellContent) {
                 $coordinate = Coordinate::stringFromColumnIndex($columnIndex) . ($rowIndex + 1);
-                if ($template[$rowIndex][$columnIndex] != $content[$rowIndex][$columnIndex]) {
-                    throw new \Exception(sprintf(
+                if ($template[$rowIndex][$columnIndex] !== $content[$rowIndex][$columnIndex]) {
+                    throw new Exception(sprintf(
                         'Import header doesn\'t match import template at position "%s". Should be "%s" but is "%s".',
                         $coordinate,
                         $template[$rowIndex][$columnIndex],
@@ -76,10 +68,7 @@ abstract class LocationFactory
         }
     }
 
-    /**
-     * @return array
-     */
-    public function getRecordsForValidRows()
+    public function getRecordsForValidRows(): array
     {
         $collection = $this->contentSheet->rangeToArray(
             $this->getDataRange(),
@@ -88,16 +77,13 @@ abstract class LocationFactory
             $formatData = true,
             $returnCellRef = true
         );
-        $collection = array_filter($collection, [$this, 'containsData']);
-        $collection = array_map([$this, 'mapDataRowToTcaRecord'], $collection);
-        return array_filter($collection, [$this, 'containsData']);
+        $collection = array_filter($collection, $this->containsData(...));
+        $collection = array_map($this->mapDataRowToTcaRecord(...), $collection);
+
+        return array_filter($collection, $this->containsData(...));
     }
 
-    /**
-     * @param array $dataRow
-     * @return array
-     */
-    public function mapDataRowToTcaRecord(array $dataRow)
+    public function mapDataRowToTcaRecord(array $dataRow): array
     {
         $result = [];
         foreach ($this->columnNameMap as $tableColumnName => $tcaFieldName) {
@@ -105,58 +91,48 @@ abstract class LocationFactory
                 $result[$tcaFieldName] = $dataRow[$tableColumnName];
             }
         }
+
         return $result;
     }
 
-    /**
-     * @param mixed $list
-     * @return bool
-     */
-    public static function containsData($list)
+    public static function containsData(mixed $list): bool
     {
-        return !!array_filter($list, function ($field) {
+        return (bool) array_filter($list, static function ($field): bool {
             if (is_array($field)) {
                 return self::containsData($field);
-            } else {
-                return !!$field;
             }
+
+            return (bool) $field;
         });
     }
 
-    /**
-     * @param array $tcaRecord
-     * @param CodingResult|null $codingResult
-     * @return array
-     * @throws InvalidSourceException
-     */
-    public function writeCoordinatesToTcaRecord(array $tcaRecord, CodingResult $codingResult = null)
+    public function writeCoordinatesToTcaRecord(array $tcaRecord, CodingResult $codingResult = null): array
     {
         $map = ['rawData', 'addressResultFromGeocoding', 'latitude', 'longitude', 'position', 'probability'];
         foreach ($map as $fieldName) {
             if ($this->fieldMap->__get($fieldName)) {
                 $tcaRecord[$this->fieldMap->__get($fieldName)] = $codingResult->__get($fieldName);
-                if (in_array($fieldName, ['rawData', 'position'])) {
-                    $tcaRecord[$this->fieldMap->__get($fieldName)] = json_encode($tcaRecord[$this->fieldMap->__get($fieldName)]);
+                if (in_array($fieldName, ['rawData', 'position'], true)) {
+                    $tcaRecord[$this->fieldMap->__get($fieldName)] = json_encode(
+                        $tcaRecord[$this->fieldMap->__get($fieldName)],
+                        JSON_THROW_ON_ERROR
+                    );
                 }
             }
         }
+
         return $tcaRecord;
     }
 
-    /**
-     * @return string
-     */
-    public function getRecordTableName()
+    public function getRecordTableName(): string
     {
         return $this->recordTableName;
     }
 
-    /**
-     * @return string
-     */
-    protected function getDataRange()
+    protected function getDataRange(): string
     {
-        $firstContentRow = max(... array_keys($this->getHeaderRowsFromTemplate())) + 2;
+        $firstContentRow = max(...array_keys($this->getHeaderRowsFromTemplate())) + 2;
+
         return sprintf(
             'A%d:%s%d',
             $firstContentRow,
@@ -166,17 +142,16 @@ abstract class LocationFactory
     }
 
     /**
-     * The Sheet::getHighestRow() consumes excel meta data. If there's an empty line
+     * The Sheet::getHighestRow() consumes excel metadata. If there's an empty line
      * that has been touched in any way before, e.g. by placing the cursor in it before
      * saving, this line gets counted as well.
      * This function actually counts non-empty lines.
-     *
-     * @return array
      */
-    protected function getHeaderRowsFromTemplate()
+    protected function getHeaderRowsFromTemplate(): array
     {
-        return array_filter($this->templateSheet->toArray(), function(array $rowData) {
-            return self::containsData($rowData);
-        });
+        return array_filter(
+            $this->templateSheet->toArray(),
+            static fn (array $rowData): bool => self::containsData($rowData)
+        );
     }
 }

@@ -1,83 +1,111 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Controller;
 
+use Exception;
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
 use Netlogix\Nxgooglelocations\Domain\Repository\BatchRepository;
+use Psr\Http\Message\ResponseInterface;
 use SJBR\StaticInfoTables\Domain\Model\Country;
 use SJBR\StaticInfoTables\Domain\Repository\CountryRepository;
-use TYPO3\CMS\Core\Messaging\FlashMessage;
+use TYPO3\CMS\Backend\Attribute\Controller;
+use TYPO3\CMS\Backend\Template\Components\ButtonBar;
+use TYPO3\CMS\Backend\Template\ModuleTemplate;
+use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Http\UploadedFile;
+use TYPO3\CMS\Core\Imaging\Icon;
+use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Messaging\AbstractMessage;
+use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Mvc\Exception\StopActionException;
-use TYPO3\CMS\Extbase\Mvc\Exception\UnsupportedRequestTypeException;
-use TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException;
-use TYPO3\CMS\Extbase\Persistence\Exception\UnknownObjectException;
+use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
-abstract class ModuleController extends AbstractBackendModuleController
+#[Controller]
+abstract class ModuleController extends ActionController
 {
-    /**
-     * @var CountryRepository
-     */
-    protected $countryRepository;
+    protected array $pageRecord = [];
 
-    /**
-     * @var BatchRepository
-     */
-    protected $batchRepository;
+    protected ?ModuleTemplate $moduleTemplate;
 
-    /**
-     * @param CountryRepository $countryRepository
-     */
-    public function injectCountryRepository(CountryRepository $countryRepository)
-    {
-        $this->countryRepository = $countryRepository;
+    public function __construct(
+        private readonly ModuleTemplateFactory $moduleTemplateFactory,
+        private readonly IconFactory $iconFactory,
+        private readonly CountryRepository $countryRepository,
+        private readonly BatchRepository $batchRepository,
+    ) {
     }
 
-    /**
-     * @param BatchRepository $batchRepository
-     */
-    public function injectBatchRepository(BatchRepository $batchRepository)
+    protected function initializeAction(): void
     {
-        $this->batchRepository = $batchRepository;
+        parent::initializeAction();
+
+        $id = (int)($this->request->getQueryParams()['id'] ?? 0);
+
+        $this->pageRecord = BackendUtility::readPageAccess(
+            $id,
+            $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW)
+        ) ?: [];
+
+        $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+
+        $docHeaderComponent = $this->moduleTemplate->getDocHeaderComponent();
+        $docHeaderComponent->setMetaInformation($this->pageRecord);
+
+        $buttonBar = $docHeaderComponent->getButtonBar();
+
+        $refreshButton = $buttonBar->makeLinkButton()
+            ->setHref($this->request->getUri())
+            ->setTitle(
+                $this->getLanguageService()->sL(
+                    'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.reload'
+                )
+            )
+            ->setIcon($this->iconFactory->getIcon('actions-refresh', Icon::SIZE_SMALL));
+
+        $buttonBar->addButton($refreshButton, ButtonBar::BUTTON_POSITION_RIGHT);
     }
 
-    /**
-     * @param int $id
-     * @throws StopActionException
-     */
-    public function indexAction($id)
+    protected function getModuleTemplateResponse(): ResponseInterface
+    {
+        $this->moduleTemplate->setContent($this->view->render());
+        return $this->htmlResponse($this->moduleTemplate->renderContent());
+    }
+
+    public function indexAction(int $id): ResponseInterface
     {
         if (!$this->settings['enabled']) {
-            $this->forwardToErrorWithCannedMessage('disabled');
+            return $this->forwardToErrorWithCannedMessage('disabled');
         }
+
         if (!$this->settings['apiKey']) {
-            $this->forwardToErrorWithCannedMessage('missing-api-key');
+            return $this->forwardToErrorWithCannedMessage('missing-api-key');
         }
 
         $allowedCountryCodes = GeneralUtility::trimExplode(',', $this->settings['allowedCountries'], true);
-        if (!$allowedCountryCodes) {
-            $this->forwardToErrorWithCannedMessage('missing-countries');
+        if ($allowedCountryCodes === []) {
+            return $this->forwardToErrorWithCannedMessage('missing-countries');
         }
 
-        if (strtoupper(join('', $allowedCountryCodes)) === 'ALL') {
+        if (strtoupper(implode('', $allowedCountryCodes)) === 'ALL') {
             $this->view->assign('allowedCountries', $this->countryRepository->findAll());
         } else {
-            $this->view->assign('allowedCountries', $this->countryRepository->findAllowedByIsoCodeA3(join(',', $allowedCountryCodes)));
+            $this->view->assign(
+                'allowedCountries',
+                $this->countryRepository->findAllowedByIsoCodeA3(implode(',', $allowedCountryCodes))
+            );
         }
-
 
         $this->view->assign('id', $id);
         $this->view->assign('localLangExtensionName', $this->getExtensionNameForLocalLang());
         $this->view->assign('batches', [
-            'tableName' => $this->getTabeNameForBatchRecords(),
-            'fieldList' => [
-                'file_name',
-                'state',
-                'amount',
-                'position',
-                'tstamp'
-            ]
+            'tableName' => $this->getTableNameForBatchRecords(),
+            'fieldList' => ['file_name', 'state', 'amount', 'position', 'tstamp'],
         ]);
         $this->view->assign('locations', [
             'tableName' => $this->getTableNameForLocationRecords(),
@@ -85,28 +113,24 @@ abstract class ModuleController extends AbstractBackendModuleController
 
         $this->view->assign('enableImport', $this->isImportEnabled());
         $this->view->assign('enableExport', $this->isExportEnabled());
+
+        return $this->getModuleTemplateResponse();
     }
 
-    /**
-     * @param int $id
-     * @param array $file
-     * @param bool $deleteUnused
-     * @param bool $cancelPrevious
-     * @param Country|null $country
-     * @throws StopActionException
-     * @throws UnsupportedRequestTypeException
-     * @throws IllegalObjectTypeException
-     * @throws UnknownObjectException
-     */
-    public function importAction($id, array $file, $deleteUnused, $cancelPrevious, Country $country = null)
+    public function importAction(int $id, bool $deleteUnused, bool $cancelPrevious, Country $country = null): ResponseInterface
     {
+        $file = $this->request->getUploadedFiles()['excelFile'] ?? null;
+        if ($file === null) {
+            throw new \RuntimeException('Uploading file failed.', 1702385736);
+        }
+
         $batch = $this->mapRequestToBatch($id, $file, $deleteUnused, $cancelPrevious, $country);
 
         try {
             $batch->validate();
-        } catch (\Exception $e) {
-            $this->addFlashMessage($e->getMessage(), '', FlashMessage::ERROR);
-            $this->redirect('index');
+        } catch (Exception $exception) {
+            $this->addFlashMessage($exception->getMessage(), '', AbstractMessage::ERROR);
+            return $this->redirect('index');
         }
 
         $extensionName = $this->getExtensionNameForLocalLang();
@@ -114,10 +138,14 @@ abstract class ModuleController extends AbstractBackendModuleController
         if ($cancelPrevious) {
             /** @var Batch $previousBatch */
             foreach ($this->batchRepository->findOpenInFolder($id) as $previousBatch) {
-                $previousBatch->cancle();
+                $previousBatch->cancel();
                 $this->batchRepository->update($previousBatch);
                 $this->addFlashMessage(
-                    LocalizationUtility::translate('module.flash-messages.job-canceled.content', $extensionName, [$previousBatch->getFileName()])
+                    LocalizationUtility::translate(
+                        'module.flash-messages.job-canceled.content',
+                        $extensionName,
+                        [$previousBatch->getFileName()]
+                    )
                 );
             }
         }
@@ -126,62 +154,68 @@ abstract class ModuleController extends AbstractBackendModuleController
         $this->addFlashMessage(
             LocalizationUtility::translate('module.flash-messages.new-job-scheduled.content', $extensionName)
         );
-        $this->redirect('index');
+        return $this->redirect('index');
     }
 
-    public function exportAction()
+    public function exportAction(): ResponseInterface
     {
+        return $this->htmlResponse();
     }
 
-    /**
-     * @return string|void
-     */
-    public function errorAction()
+    public function errorAction(): ResponseInterface
     {
+        return $this->getModuleTemplateResponse()
+            ->withStatus(400);
     }
 
-    /**
-     * @param string $reason
-     * @throws StopActionException
-     */
-    protected function forwardToErrorWithCannedMessage($reason)
+    protected function forwardToErrorWithCannedMessage(string $reason): ResponseInterface
     {
         $extensionName = $this->getExtensionNameForLocalLang();
         $this->addFlashMessage(
             LocalizationUtility::translate(sprintf('module.flash-messages.%s.content', $reason), $extensionName),
             LocalizationUtility::translate(sprintf('module.flash-messages.%s.title', $reason), $extensionName),
-            FlashMessage::ERROR
+            AbstractMessage::ERROR
         );
-        $this->forward('error');
+        return $this->redirect('error');
     }
 
-    protected function getExtensionNameForLocalLang()
+    protected function getExtensionNameForLocalLang(): string
     {
         return 'nxgooglelocations';
     }
 
-    /**
-     * @return string
-     */
-    protected function getTabeNameForBatchRecords()
+    protected function getTableNameForBatchRecords(): string
     {
         return 'tx_nxgooglelocations_domain_model_batch';
     }
 
-    /**
-     * @return string
-     */
-    abstract protected function getTableNameForLocationRecords();
+    abstract protected function getTableNameForLocationRecords(): string;
 
-    abstract protected function mapRequestToBatch($id, array $file, $deleteUnused, $cancelPrevious, Country $country = null): Batch;
+    abstract protected function mapRequestToBatch(
+        $id,
+        UploadedFile $file,
+        $deleteUnused,
+        $cancelPrevious,
+        Country $country = null
+    ): Batch;
 
-    protected function isImportEnabled()
+    protected function isImportEnabled(): bool
     {
         return empty($this->settings['disableImport']);
     }
 
-    protected function isExportEnabled()
+    protected function isExportEnabled(): bool
     {
         return empty($this->settings['disableExport']);
+    }
+
+    protected function getLanguageService(): LanguageService
+    {
+        return $GLOBALS['LANG'];
+    }
+
+    protected function getBackendUser(): BackendUserAuthentication
+    {
+        return $GLOBALS['BE_USER'];
     }
 }

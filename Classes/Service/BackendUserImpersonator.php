@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Service;
 
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;

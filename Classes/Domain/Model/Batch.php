@@ -1,181 +1,100 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\Domain\Model;
 
+use DateTime;
 use Exception;
 use Netlogix\Nxgooglelocations\Service\BackendUserImpersonator;
 use Netlogix\Nxgooglelocations\Service\GeoCoder;
 use Netlogix\Nxgooglelocations\Service\Importer;
 use Netlogix\Nxgooglelocations\Service\LocationFactory;
-use PhpOffice\PhpSpreadsheet\Exception as SpreadsheetException;
-use PhpOffice\PhpSpreadsheet\Reader\Exception as ReaderException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Annotation\ORM as TYPO3;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 class Batch extends AbstractEntity
 {
-    const STATE_NEW = 'new';
-    const STATE_VALIDATING = 'validating';
-    const STATE_GEOCODING = 'running';
-    const STATE_PERSISTING = 'persisting';
-    const STATE_CLOSED = 'closed';
+    protected string $fileName;
 
-    /**
-     * @var string
-     */
-    protected $apiKey;
+    protected string $fileContent;
 
-    /**
-     * @var int
-     */
-    protected $storagePageId;
+    protected string $fileHash;
 
-    /**
-     * @var int
-     */
-    protected $backendUserId;
+    protected bool $deleteUnused;
 
-    /**
-     * @var string
-     */
-    protected $fileName;
+    #[TYPO3\Transient]
+    protected ?BackendUserImpersonator $impersonator = null;
 
-    /**
-     * @var string
-     */
-    protected $fileContent;
+    #[TYPO3\Transient]
+    protected ?GeoCoder $geoCoder = null;
 
-    /**
-     * @var string
-     */
-    protected $fileHash;
+    #[TYPO3\Transient]
+    protected ?Importer $importer = null;
 
-    /**
-     * @var bool
-     */
-    protected $deleteUnused;
-
-    /**
-     * @var BackendUserImpersonator
-     * @TYPO3\Transient
-     */
-    protected $impersonator;
-
-    /**
-     * @var GeoCoder
-     * @TYPO3\Transient
-     */
-    protected $geoCoder;
-
-    /**
-     * @var Importer
-     * @TYPO3\Transient
-     */
-    protected $importer;
-
-    /**
-     * @var LocationFactory
-     * @TYPO3\Transient
-     */
-    protected $locationFactory;
+    #[TYPO3\Transient]
+    protected ?LocationFactory $locationFactory = null;
 
     /**
      * @var callable
-     * @TYPO3\Transient
      */
+    #[TYPO3\Transient]
     protected $callback;
 
-    /**
-     * @var string
-     */
-    protected $state = self::STATE_NEW;
+    protected BatchState $state = BatchState::NEW;
+
+    protected int $amount = 0;
+
+    protected int $position = 0;
+
+    protected int $geocodingRequests = 0;
+
+    protected ?DateTime $tstamp;
 
     /**
-     * @var int
+     * @var string[]
      */
-    protected $amount = 0;
-
-    /**
-     * @var int
-     */
-    protected $position = 0;
-
-    /**
-     * @var int
-     */
-    protected $geocodingRequests = 0;
-
-    /**
-     * @var \DateTime
-     */
-    protected $tstamp;
-
-    /**
-     * @var array<string>
-     * @TYPO3\Transient
-     */
+    #[TYPO3\Transient]
     protected $serviceClasses = [
         GeoCoder::class => GeoCoder::class,
         Importer::class => Importer::class,
         LocationFactory::class => LocationFactory::class,
     ];
 
-    /**
-     * @param string $apiKey
-     * @param int $storagePageId
-     * @param int $backendUserId
-     * @param string $filePath
-     * @param string $fileName
-     * @param bool $deleteUnused
-     */
     public function __construct(
-        $apiKey,
-        $storagePageId,
-        $backendUserId,
-        $filePath,
-        $fileName = '',
-        $deleteUnused = true
+        protected string $apiKey,
+        protected int $storagePageId,
+        protected int $backendUserId,
+        string $filePath,
+        string $fileName = '',
+        bool $deleteUnused = true
     ) {
-        $this->apiKey = $apiKey;
-        $this->storagePageId = $storagePageId;
-        $this->backendUserId = $backendUserId;
         $this->fileName = pathinfo($fileName ?: $filePath, PATHINFO_BASENAME);
         $this->fileContent = base64_encode(file_get_contents(GeneralUtility::getFileAbsFileName($filePath)));
         $this->fileHash = sha1($this->fileContent);
-        $this->deleteUnused = !!$deleteUnused;
+        $this->deleteUnused = $deleteUnused;
     }
 
-    public function getFileName()
+    public function getFileName(): string
     {
         return $this->fileName;
     }
 
-    /**
-     * @param callable|null $callback
-     * @throws SpreadsheetException
-     * @throws ReaderException
-     */
-    public function run(callable $callback = null)
+    public function run(callable $callback = null): void
     {
         $this->callback = $callback;
-        $this->setState(self::STATE_VALIDATING);
+        $this->setState(BatchState::VALIDATING);
         $this->validate();
-        $this->setState(self::STATE_GEOCODING);
+        $this->setState(BatchState::GEOCODING);
         $tcaRecords = $this->collectTcaRecords();
-        $this->setState(self::STATE_PERSISTING);
+        $this->setState(BatchState::PERSISTING);
         $this->executeDataHandler($tcaRecords);
-        $this->setState(self::STATE_CLOSED);
+        $this->setState(BatchState::CLOSED);
         $this->callback = null;
     }
 
-    /**
-     * @throws SpreadsheetException
-     * @throws ReaderException
-     * @throws Exception
-     */
-    public function validate()
+    public function validate(): void
     {
         $filePath = $this->getTemporaryFilePath();
         $factory = $this->getLocationFactory();
@@ -184,54 +103,53 @@ class Batch extends AbstractEntity
         $factory->compareHeaderRows();
     }
 
-    public function cancle()
+    public function cancel(): void
     {
-        $this->setState(self::STATE_CLOSED);
+        $this->setState(BatchState::CLOSED);
     }
 
-    protected function setState($state)
+    protected function setState(BatchState $state): void
     {
         $this->state = $state;
         $this->emitStateChange();
     }
 
-    protected function setAmountAndResetPosition($amount)
+    protected function setAmountAndResetPosition(int $amount): void
     {
         $this->amount = $amount;
         $this->position = 0;
         $this->emitStateChange();
     }
 
-    protected function setPosition($position)
+    protected function setPosition(int $position): void
     {
         $this->position = $position;
         $this->emitStateChange();
     }
 
-    protected function emitStateChange()
+    protected function emitStateChange(): void
     {
         $this->callback && call_user_func($this->callback, $this, $this->amount, $this->position, $this->state);
     }
 
-    protected function getTemporaryFilePath()
+    protected function getTemporaryFilePath(): string
     {
-        $filePath = GeneralUtility::tempnam(
-            'location-batch-',
-            pathinfo($this->fileName, PATHINFO_EXTENSION)
-        );
+        $filePath = GeneralUtility::tempnam('location-batch-', pathinfo($this->fileName, PATHINFO_EXTENSION));
         GeneralUtility::writeFileToTypo3tempDir($filePath, $this->getFileContent());
+
         return $filePath;
     }
 
     protected function getFileContent(): string
     {
-        return base64_decode($this->fileContent);
+        return base64_decode($this->fileContent, true);
     }
 
-    protected function collectTcaRecords()
+    protected function collectTcaRecords(): array
     {
-        $tcaRecords = $this->getLocationFactory()->getRecordsForValidRows();
-        $this->setAmountAndResetPosition(count($tcaRecords));
+        $tcaRecords = $this->getLocationFactory()
+            ->getRecordsForValidRows();
+        $this->setAmountAndResetPosition(is_countable($tcaRecords) ? count($tcaRecords) : 0);
 
         $position = 0;
         foreach ($tcaRecords as $id => $tcaRecord) {
@@ -242,54 +160,40 @@ class Batch extends AbstractEntity
         return $tcaRecords;
     }
 
-    protected function executeDataHandler($tcaRecords)
+    protected function executeDataHandler($tcaRecords): void
     {
-        $backendUserId = (int)$this->backendUserId;
-        $storagePageId = (int)$this->storagePageId;
-        $deleteUnused = (bool)$this->deleteUnused;
+        $backendUserId = $this->backendUserId;
+        $storagePageId = $this->storagePageId;
+        $deleteUnused = $this->deleteUnused;
 
         $importer = $this->getImporter();
 
-        $recordTableName = $this->getLocationFactory()->getRecordTableName();
+        $recordTableName = $this->getLocationFactory()
+            ->getRecordTableName();
 
         $this->impersonator->runAsBackendUser(
             $backendUserId,
-            static function () use ($importer, $recordTableName, $tcaRecords, $storagePageId, $deleteUnused) {
-                $recordUids = $importer->import(
-                    $recordTableName,
-                    $storagePageId,
-                    $tcaRecords
-                );
+            static function () use ($importer, $recordTableName, $tcaRecords, $storagePageId, $deleteUnused): void {
+                $recordUids = $importer->import($recordTableName, $storagePageId, $tcaRecords);
                 if ($deleteUnused) {
-                    $importer->removeRecordsExcept(
-                        $recordTableName,
-                        $storagePageId,
-                        ... $recordUids
-                    );
+                    $importer->removeRecordsExcept($recordTableName, $storagePageId, $recordUids);
                 }
             }
         );
     }
 
-    /**
-     * @param $tcaRecord
-     * @return array
-     */
-    protected function mapTcaRecord($tcaRecord)
+    protected function mapTcaRecord($tcaRecord): array
     {
         $importer = $this->getImporter();
         $factory = $this->getLocationFactory();
         $coder = $this->getGeoCoder();
 
-        $tcaRecord = $importer->writeExistingIdentifierToTcaRecord(
-            $factory->getRecordTableName(),
-            $tcaRecord
-        );
+        $tcaRecord = $importer->writeExistingIdentifierToTcaRecord($factory->getRecordTableName(), $tcaRecord);
         if (!$coder->needsToBeGeoCoded($tcaRecord)) {
             $tcaRecord = $coder->setProbabilityToManually($tcaRecord);
         }
 
-        $existingRecord = (array)$importer->getExistingRecord(
+        $existingRecord = (array) $importer->getExistingRecord(
             $factory->getRecordTableName(),
             $this->storagePageId,
             $tcaRecord
@@ -299,59 +203,59 @@ class Batch extends AbstractEntity
             && !$coder->needsToBeGeoCoded($existingRecord)
             && $coder->getGeoCodingAddress($tcaRecord) === $coder->getGeoCodingAddress($existingRecord)
         ) {
-            $tcaRecord = $importer->writeExistingCoordinatesToTcaRecord(
-                $factory->getRecordTableName(),
-                $tcaRecord
-            );
+            $tcaRecord = $importer->writeExistingCoordinatesToTcaRecord($factory->getRecordTableName(), $tcaRecord);
         }
 
         if ($coder->needsToBeGeoCoded($tcaRecord)) {
             try {
-                $this->geocodingRequests++;
+                ++$this->geocodingRequests;
                 $geoCodingAddress = $coder->getGeoCodingAddress($tcaRecord);
                 $codingResult = $coder->fetchCoordinatesForAddress($geoCodingAddress);
                 $tcaRecord = $factory->writeCoordinatesToTcaRecord($tcaRecord, $codingResult);
-            } catch (\Exception $e) {
-
+            } catch (Exception) {
             }
         }
 
         return $tcaRecord;
     }
 
-    protected function getGeoCoder()
+    protected function getGeoCoder(): GeoCoder
     {
         $this->initializeServices();
+
         return $this->geoCoder;
     }
 
-    protected function getImporter()
+    protected function getImporter(): Importer
     {
         $this->initializeServices();
+
         return $this->importer;
     }
 
-    protected function getLocationFactory()
+    protected function getLocationFactory(): LocationFactory
     {
         $this->initializeServices();
+
         return $this->locationFactory;
     }
 
-    protected function initializeServices()
+    protected function initializeServices(): void
     {
-        $objectManager = GeneralUtility::makeInstance(ObjectManager::class);
-
         if (!$this->impersonator) {
-            $this->impersonator = $objectManager->get(BackendUserImpersonator::class);
+            $this->impersonator = GeneralUtility::makeInstance(BackendUserImpersonator::class);
         }
+
         if (!$this->geoCoder) {
-            $this->geoCoder = $objectManager->get($this->serviceClasses[GeoCoder::class], $this->apiKey);
+            $this->geoCoder = GeneralUtility::makeInstance($this->serviceClasses[GeoCoder::class], $this->apiKey);
         }
+
         if (!$this->importer) {
-            $this->importer = $objectManager->get($this->serviceClasses[Importer::class], $this->storagePageId);
+            $this->importer = GeneralUtility::makeInstance($this->serviceClasses[Importer::class], $this->storagePageId);
         }
+
         if (!$this->locationFactory) {
-            $this->locationFactory = $objectManager->get($this->serviceClasses[LocationFactory::class]);
+            $this->locationFactory = GeneralUtility::makeInstance($this->serviceClasses[LocationFactory::class]);
         }
     }
 }
