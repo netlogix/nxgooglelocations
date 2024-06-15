@@ -50,6 +50,8 @@ abstract class Importer
         }
 
         $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->isImporting = true;
+        $dataHandler->enableLogging = false;
         $dataHandler->start($data, $commands);
         $dataHandler->process_datamap();
         $dataHandler->process_cmdmap();
@@ -83,6 +85,8 @@ abstract class Importer
         }
 
         $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->isImporting = true;
+        $dataHandler->enableLogging = false;
         $dataHandler->start([], $commands);
         $dataHandler->process_datamap();
         $dataHandler->process_cmdmap();
