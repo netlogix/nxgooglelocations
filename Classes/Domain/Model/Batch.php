@@ -249,7 +249,10 @@ class Batch extends AbstractEntity
         }
 
         if (!$this->importer instanceof \Netlogix\Nxgooglelocations\Service\Importer) {
-            $this->importer = GeneralUtility::makeInstance($this->serviceClasses[Importer::class], $this->storagePageId);
+            $this->importer = GeneralUtility::makeInstance(
+                $this->serviceClasses[Importer::class],
+                $this->storagePageId
+            );
         }
 
         if (!$this->locationFactory instanceof \Netlogix\Nxgooglelocations\Service\LocationFactory) {
