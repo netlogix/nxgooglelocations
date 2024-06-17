@@ -11,10 +11,10 @@ final class GeoCoderStatus extends Enumeration
     /**
      * @var string
      */
-    final public const OK = 'OK';
+    public const OK = 'OK';
 
     /**
      * @var string
      */
-    final public const ZERO_RESULTS = 'ZERO_RESULTS';
+    public const ZERO_RESULTS = 'ZERO_RESULTS';
 }

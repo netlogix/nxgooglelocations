@@ -23,8 +23,6 @@ class Batch extends AbstractEntity
 
     protected string $fileHash;
 
-    protected bool $deleteUnused;
-
     #[TYPO3\Transient]
     protected ?BackendUserImpersonator $impersonator = null;
 
@@ -51,7 +49,7 @@ class Batch extends AbstractEntity
 
     protected int $geocodingRequests = 0;
 
-    protected ?DateTime $tstamp;
+    protected ?DateTime $tstamp = null;
 
     /**
      * @var string[]
@@ -69,12 +67,11 @@ class Batch extends AbstractEntity
         protected int $backendUserId,
         string $filePath,
         string $fileName = '',
-        bool $deleteUnused = true
+        protected bool $deleteUnused = true
     ) {
         $this->fileName = pathinfo($fileName ?: $filePath, PATHINFO_BASENAME);
         $this->fileContent = base64_encode(file_get_contents(GeneralUtility::getFileAbsFileName($filePath)));
         $this->fileHash = sha1($this->fileContent);
-        $this->deleteUnused = $deleteUnused;
     }
 
     public function getFileName(): string
@@ -161,7 +158,7 @@ class Batch extends AbstractEntity
         return $tcaRecords;
     }
 
-    protected function executeDataHandler($tcaRecords): void
+    protected function executeDataHandler(array $tcaRecords): void
     {
         $backendUserId = $this->backendUserId;
         $storagePageId = $this->storagePageId;
@@ -243,19 +240,19 @@ class Batch extends AbstractEntity
 
     protected function initializeServices(): void
     {
-        if (!$this->impersonator) {
+        if (!$this->impersonator instanceof \Netlogix\Nxgooglelocations\Service\BackendUserImpersonator) {
             $this->impersonator = GeneralUtility::makeInstance(BackendUserImpersonator::class);
         }
 
-        if (!$this->geoCoder) {
+        if (!$this->geoCoder instanceof \Netlogix\Nxgooglelocations\Service\GeoCoder) {
             $this->geoCoder = GeneralUtility::makeInstance($this->serviceClasses[GeoCoder::class], $this->apiKey);
         }
 
-        if (!$this->importer) {
+        if (!$this->importer instanceof \Netlogix\Nxgooglelocations\Service\Importer) {
             $this->importer = GeneralUtility::makeInstance($this->serviceClasses[Importer::class], $this->storagePageId);
         }
 
-        if (!$this->locationFactory) {
+        if (!$this->locationFactory instanceof \Netlogix\Nxgooglelocations\Service\LocationFactory) {
             $this->locationFactory = GeneralUtility::makeInstance($this->serviceClasses[LocationFactory::class]);
         }
     }

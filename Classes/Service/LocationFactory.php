@@ -15,22 +15,13 @@ abstract class LocationFactory
 {
     use ExcelServiceTrait;
 
-    protected $templateFileName = '/dev/null';
+    protected string $templateFileName = '/dev/null';
 
-    /**
-     * @var FieldMap
-     */
-    protected $fieldMap;
+    protected FieldMap $fieldMap;
 
-    /**
-     * @var string
-     */
-    protected $fieldMapClassName = FieldMap::class;
+    protected string $fieldMapClassName = FieldMap::class;
 
-    /**
-     * @var string
-     */
-    protected $recordTableName = '';
+    protected string $recordTableName = '';
 
     protected array $columnNameMap = [
         'A' => 'title',
@@ -40,7 +31,7 @@ abstract class LocationFactory
         'E' => 'longitude',
     ];
 
-    protected ?Worksheet $templateSheet;
+    protected ?Worksheet $templateSheet = null;
 
     public function __construct()
     {
@@ -110,7 +101,7 @@ abstract class LocationFactory
     {
         $map = ['rawData', 'addressResultFromGeocoding', 'latitude', 'longitude', 'position', 'probability'];
         foreach ($map as $fieldName) {
-            if ($this->fieldMap->__get($fieldName)) {
+            if ($this->fieldMap->__get($fieldName) !== '' && $this->fieldMap->__get($fieldName) !== '0') {
                 $tcaRecord[$this->fieldMap->__get($fieldName)] = $codingResult->__get($fieldName);
                 if (in_array($fieldName, ['rawData', 'position'], true)) {
                     $tcaRecord[$this->fieldMap->__get($fieldName)] = json_encode(
