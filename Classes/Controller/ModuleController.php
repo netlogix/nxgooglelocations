@@ -31,7 +31,7 @@ abstract class ModuleController extends ActionController
 {
     protected array $pageRecord = [];
 
-    protected ?ModuleTemplate $moduleTemplate;
+    protected ?ModuleTemplate $moduleTemplate = null;
 
     public function __construct(
         private readonly ModuleTemplateFactory $moduleTemplateFactory,
@@ -129,7 +129,7 @@ abstract class ModuleController extends ActionController
         try {
             $batch->validate();
         } catch (Exception $exception) {
-            $this->addFlashMessage($exception->getMessage(), '', AbstractMessage::ERROR);
+            $this->addFlashMessage($exception->getMessage(), '', \TYPO3\CMS\Core\Type\ContextualFeedbackSeverity::ERROR);
             return $this->redirect('index');
         }
 
@@ -162,7 +162,7 @@ abstract class ModuleController extends ActionController
         return $this->htmlResponse();
     }
 
-    public function errorAction(): ResponseInterface
+    protected function errorAction(): ResponseInterface
     {
         return $this->getModuleTemplateResponse()
             ->withStatus(400);
@@ -174,7 +174,7 @@ abstract class ModuleController extends ActionController
         $this->addFlashMessage(
             LocalizationUtility::translate(sprintf('module.flash-messages.%s.content', $reason), $extensionName),
             LocalizationUtility::translate(sprintf('module.flash-messages.%s.title', $reason), $extensionName),
-            AbstractMessage::ERROR
+            \TYPO3\CMS\Core\Type\ContextualFeedbackSeverity::ERROR
         );
         return $this->redirect('error');
     }

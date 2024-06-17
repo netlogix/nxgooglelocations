@@ -11,30 +11,30 @@ final class BatchState extends Enumeration
     /**
      * @var string
      */
-    final public const __default = self::NEW;
+    public const __default = self::NEW;
 
     /**
      * @var string
      */
-    final public const NEW = 'new';
+    public const NEW = 'new';
 
     /**
      * @var string
      */
-    final public const VALIDATING = 'validating';
+    public const VALIDATING = 'validating';
 
     /**
      * @var string
      */
-    final public const GEOCODING = 'running';
+    public const GEOCODING = 'running';
 
     /**
      * @var string
      */
-    final public const PERSISTING = 'persisting';
+    public const PERSISTING = 'persisting';
 
     /**
      * @var string
      */
-    final public const CLOSED = 'closed';
+    public const CLOSED = 'closed';
 }

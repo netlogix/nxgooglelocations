@@ -11,7 +11,6 @@ $value = [
         'label' => 'file_name',
         'tstamp' => 'tstamp',
         'crdate' => 'crdate',
-        'cruser_id' => 'cruser_id',
         'type' => 'type',
         'delete' => 'deleted',
         'default_sortby' => 'tstamp DESC, uid DESC',
@@ -21,9 +20,6 @@ $value = [
         'typeicon_classes' => [
             'default' => 'ext-nxgooglelocations-batch-type-default',
         ],
-    ],
-    'interface' => [
-        'showRecordFieldList' => '',
     ],
     'types' => [
         '0' => [

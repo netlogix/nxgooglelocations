@@ -14,20 +14,12 @@ use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
 abstract class GeoCoder
 {
-    /**
-     * @var string
-     */
+
     final public const FETCH_URL = 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s';
 
-    /**
-     * @var FieldMap
-     */
-    protected $fieldMap;
+    protected FieldMap $fieldMap;
 
-    /**
-     * @var string
-     */
-    protected $fieldMapClassName = FieldMap::class;
+    protected string $fieldMapClassName = FieldMap::class;
 
     /**
      * The number of geocoding results must be lower than this in order to make an existing

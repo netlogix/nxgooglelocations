@@ -12,6 +12,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 trait ExcelServiceTrait
 {
     protected ?Worksheet $templateSheet;
+
     protected ?Worksheet $contentSheet;
 
     public function resetTemplateSheet(string $templateFileName): void

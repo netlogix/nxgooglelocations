@@ -27,6 +27,7 @@ final class TableListViewHelper extends AbstractBackendViewHelper
      * @var bool
      */
     protected $escapeOutput = false;
+
     protected ConfigurationManagerInterface $configurationManager;
 
     public function injectConfigurationManager(ConfigurationManagerInterface $configurationManager): void
@@ -82,7 +83,7 @@ final class TableListViewHelper extends AbstractBackendViewHelper
         $this->registerArgument(
             'readOnly',
             'bool',
-            'if TRUE, the edit icons won\'t be shown. Otherwise edit icons will be shown, if the current BE user has edit rights for the specified table!',
+            "if TRUE, the edit icons won't be shown. Otherwise edit icons will be shown, if the current BE user has edit rights for the specified table!",
             false,
             false
         );
@@ -118,7 +119,7 @@ final class TableListViewHelper extends AbstractBackendViewHelper
         $clickTitleMode = $this->arguments['clickTitleMode'];
         $enableControlPanels = $this->arguments['enableControlPanels'];
 
-        $languageService = $this->getLanguageService();
+        $this->getLanguageService();
         $backendUser = $this->getBackendUser();
         /** @var RenderingContext $renderingContext */
         $renderingContext = $this->renderingContext;
@@ -161,12 +162,14 @@ final class TableListViewHelper extends AbstractBackendViewHelper
         $dbList->displayRecordDownload = false;
         $dbList->setRequest($request);
         $dbList->setModuleData($moduleData);
+
         $dbList->pageRow = $pageInfo;
         if ($readOnly) {
             $dbList->setIsEditable(false);
         } else {
             $dbList->calcPerms = new Permission($backendUser->calcPerms($pageInfo));
         }
+
         $dbList->disableSingleTableView = true;
         $dbList->clickTitleMode = $clickTitleMode;
         $dbList->clickMenuEnabled = $enableClickMenu;
@@ -176,6 +179,7 @@ final class TableListViewHelper extends AbstractBackendViewHelper
             );
             $storagePid = $frameworkConfiguration['persistence']['storagePid'];
         }
+
         $dbList->start($storagePid, $tableName, $pointer, $filter, $levels, $recordsPerPage);
         // Column selector is disabled since fields are defined by the "fieldList" argument
         $dbList->displayColumnSelector = false;
