@@ -11,15 +11,15 @@ final class CodingResultProbability extends Enumeration
     /**
      * @var int
      */
-    final public const ZERO_RESULTS = -1;
+    public const ZERO_RESULTS = -1;
 
     /**
      * @var int
      */
-    final public const MANUALLY_IMPORT = -255;
+    public const MANUALLY_IMPORT = -255;
 
     /**
      * @var int
      */
-    final public const MANUALLY_EDITOR = -256;
+    public const MANUALLY_EDITOR = -256;
 }

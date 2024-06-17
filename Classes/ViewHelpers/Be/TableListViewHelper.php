@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Netlogix\Nxgooglelocations\ViewHelpers\Be;
 
 use Psr\Http\Message\ServerRequestInterface;
@@ -27,6 +29,7 @@ final class TableListViewHelper extends AbstractBackendViewHelper
      * @var bool
      */
     protected $escapeOutput = false;
+
     protected ConfigurationManagerInterface $configurationManager;
 
     public function injectConfigurationManager(ConfigurationManagerInterface $configurationManager): void
@@ -82,7 +85,7 @@ final class TableListViewHelper extends AbstractBackendViewHelper
         $this->registerArgument(
             'readOnly',
             'bool',
-            'if TRUE, the edit icons won\'t be shown. Otherwise edit icons will be shown, if the current BE user has edit rights for the specified table!',
+            "if TRUE, the edit icons won't be shown. Otherwise edit icons will be shown, if the current BE user has edit rights for the specified table!",
             false,
             false
         );
@@ -118,7 +121,7 @@ final class TableListViewHelper extends AbstractBackendViewHelper
         $clickTitleMode = $this->arguments['clickTitleMode'];
         $enableControlPanels = $this->arguments['enableControlPanels'];
 
-        $languageService = $this->getLanguageService();
+        $this->getLanguageService();
         $backendUser = $this->getBackendUser();
         /** @var RenderingContext $renderingContext */
         $renderingContext = $this->renderingContext;
@@ -134,21 +137,25 @@ final class TableListViewHelper extends AbstractBackendViewHelper
         $table = $request->getParsedBody()['table'] ?? $request->getQueryParams()['table'] ?? '';
         $preventPointer = $tableName !== $table;
 
-        $this->getPageRenderer()->loadJavaScriptModule('@typo3/backend/recordlist.js');
+        $this->getPageRenderer()
+            ->loadJavaScriptModule('@typo3/backend/recordlist.js');
         // Removed to disable the download button
         // $this->getPageRenderer()->loadJavaScriptModule('@typo3/backend/record-download-button.js');
-        $this->getPageRenderer()->loadJavaScriptModule('@typo3/backend/action-dispatcher.js');
+        $this->getPageRenderer()
+            ->loadJavaScriptModule('@typo3/backend/action-dispatcher.js');
         if ($enableControlPanels === true) {
-            $this->getPageRenderer()->loadJavaScriptModule('@typo3/backend/multi-record-selection.js');
-            $this->getPageRenderer()->loadJavaScriptModule('@typo3/backend/context-menu.js');
+            $this->getPageRenderer()
+                ->loadJavaScriptModule('@typo3/backend/multi-record-selection.js');
+            $this->getPageRenderer()
+                ->loadJavaScriptModule('@typo3/backend/context-menu.js');
         }
 
-        $pageId = (int)($request->getParsedBody()['id'] ?? $request->getQueryParams()['id'] ?? 0);
+        $pageId = (int) ($request->getParsedBody()['id'] ?? $request->getQueryParams()['id'] ?? 0);
 
         // Added to fix the issue with the table pointer
         $pointer = $preventPointer
             ? 0
-            : (int)($request->getParsedBody()['pointer'] ?? $request->getQueryParams()['pointer'] ?? 0);
+            : (int) ($request->getParsedBody()['pointer'] ?? $request->getQueryParams()['pointer'] ?? 0);
         $pageInfo = BackendUtility::readPageAccess(
             $pageId,
             $backendUser->getPagePermsClause(Permission::PAGE_SHOW)
@@ -161,12 +168,14 @@ final class TableListViewHelper extends AbstractBackendViewHelper
         $dbList->displayRecordDownload = false;
         $dbList->setRequest($request);
         $dbList->setModuleData($moduleData);
+
         $dbList->pageRow = $pageInfo;
         if ($readOnly) {
             $dbList->setIsEditable(false);
         } else {
             $dbList->calcPerms = new Permission($backendUser->calcPerms($pageInfo));
         }
+
         $dbList->disableSingleTableView = true;
         $dbList->clickTitleMode = $clickTitleMode;
         $dbList->clickMenuEnabled = $enableClickMenu;
@@ -176,13 +185,17 @@ final class TableListViewHelper extends AbstractBackendViewHelper
             );
             $storagePid = $frameworkConfiguration['persistence']['storagePid'];
         }
+
         $dbList->start($storagePid, $tableName, $pointer, $filter, $levels, $recordsPerPage);
         // Column selector is disabled since fields are defined by the "fieldList" argument
         $dbList->displayColumnSelector = false;
-        $dbList->setFields = [$tableName => $fieldList];
+        $dbList->setFields = [
+            $tableName => $fieldList,
+        ];
         $dbList->noControlPanels = !$enableControlPanels;
         $dbList->sortField = $sortField;
         $dbList->sortRev = $sortDescending;
+
         return $dbList->generateList();
     }
 

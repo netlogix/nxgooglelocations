@@ -22,7 +22,7 @@ abstract class GeoCoder
     /**
      * @var FieldMap
      */
-    protected $fieldMap;
+    protected object $fieldMap;
 
     /**
      * @var string
@@ -66,13 +66,14 @@ abstract class GeoCoder
         $urlWithApiKey = sprintf(self::FETCH_URL, urlencode((string) $address), urlencode($this->apiKey));
         $geocode = json_decode((string) GeneralUtility::getUrl($urlWithApiKey), true, 512, JSON_THROW_ON_ERROR);
         $status = ObjectAccess::getPropertyPath($geocode, 'status');
+
         return match ($status) {
             GeoCoderStatus::OK, GeoCoderStatus::ZERO_RESULTS => new CodingResult($geocode),
             default => throw new Exception(
                 'An error occurred: ' . json_encode(
                     array_filter(
                         [$status, ObjectAccess::getPropertyPath($geocode, 'error_message')],
-                        static fn($value): bool => (bool)$value
+                        static fn ($value): bool => (bool) $value
                     ),
                     JSON_THROW_ON_ERROR
                 )
