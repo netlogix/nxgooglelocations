@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Netlogix\Nxgooglelocations\Domain\Repository;
 
-use Netlogix\Nxgooglelocations\Enumerations\BatchState;
-use TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings;
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
+use Netlogix\Nxgooglelocations\Enumerations\BatchState;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface;
+use TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
@@ -39,6 +39,8 @@ class BatchRepository extends Repository
 
     public function findOneByState(string $state): ?Batch
     {
-        return $this->findOneBy(['state' => $state]);
+        return $this->findOneBy([
+            'state' => $state,
+        ]);
     }
 }
