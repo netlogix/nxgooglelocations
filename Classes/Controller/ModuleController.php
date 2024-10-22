@@ -137,11 +137,7 @@ abstract class ModuleController extends ActionController
         try {
             $batch->validate();
         } catch (Exception $exception) {
-            $this->addFlashMessage(
-                $exception->getMessage(),
-                '',
-                ContextualFeedbackSeverity::ERROR
-            );
+            $this->addFlashMessage($exception->getMessage(), '', ContextualFeedbackSeverity::ERROR);
 
             return $this->redirect('index');
         }
