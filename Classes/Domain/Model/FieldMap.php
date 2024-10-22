@@ -27,7 +27,7 @@ abstract class FieldMap
         'probability' => 'tx_nxgooglelocations_probability',
     ];
 
-    public function __get($propertyName): string
+    public function __get($propertyName): ?string
     {
         return $this->fieldMap[$propertyName];
     }

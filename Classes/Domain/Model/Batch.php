@@ -158,11 +158,13 @@ class Batch extends AbstractEntity
         return $tcaRecords;
     }
 
-    protected function executeDataHandler(array $tcaRecords): void
+    protected function executeDataHandler(array $tcaRecords): array
     {
         $backendUserId = $this->backendUserId;
         $storagePageId = $this->storagePageId;
         $deleteUnused = $this->deleteUnused;
+
+        $recordUids = [];
 
         $importer = $this->getImporter();
 
@@ -171,13 +173,22 @@ class Batch extends AbstractEntity
 
         $this->impersonator->runAsBackendUser(
             $backendUserId,
-            static function () use ($importer, $recordTableName, $tcaRecords, $storagePageId, $deleteUnused): void {
+            static function () use (
+                $importer,
+                $recordTableName,
+                $tcaRecords,
+                $storagePageId,
+                $deleteUnused,
+                &$recordUids
+            ): void {
                 $recordUids = $importer->import($recordTableName, $storagePageId, $tcaRecords);
                 if ($deleteUnused) {
                     $importer->removeRecordsExcept($recordTableName, $storagePageId, $recordUids);
                 }
             }
         );
+
+        return $recordUids;
     }
 
     protected function mapTcaRecord($tcaRecord): array
@@ -249,7 +260,10 @@ class Batch extends AbstractEntity
         }
 
         if (!$this->importer instanceof \Netlogix\Nxgooglelocations\Service\Importer) {
-            $this->importer = GeneralUtility::makeInstance($this->serviceClasses[Importer::class], $this->storagePageId);
+            $this->importer = GeneralUtility::makeInstance(
+                $this->serviceClasses[Importer::class],
+                $this->storagePageId
+            );
         }
 
         if (!$this->locationFactory instanceof \Netlogix\Nxgooglelocations\Service\LocationFactory) {

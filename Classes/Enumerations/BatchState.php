@@ -36,5 +36,10 @@ final class BatchState extends Enumeration
     /**
      * @var string
      */
+    public const ERROR = 'error';
+
+    /**
+     * @var string
+     */
     public const CLOSED = 'closed';
 }
