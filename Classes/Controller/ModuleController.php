@@ -79,8 +79,10 @@ abstract class ModuleController extends ActionController
         return $this->htmlResponse($this->moduleTemplate->renderContent());
     }
 
-    public function indexAction(int $id): ResponseInterface
+    public function indexAction(): ResponseInterface
     {
+        $id = (int) ($this->request->getQueryParams()['id'] ?? 0);
+
         if (!$this->settings['enabled']) {
             return $this->forwardToErrorWithCannedMessage('disabled');
         }
