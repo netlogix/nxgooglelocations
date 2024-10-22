@@ -35,7 +35,7 @@ abstract class GeoCoder
 
     public function getGeoCodingAddress(array $tcaRecord): string
     {
-        return $tcaRecord[$this->fieldMap->addressToGeocode] ?: $tcaRecord[$this->fieldMap->addressToDisplay];
+        return $tcaRecord[$this->fieldMap->addressToGeocode] ?? $tcaRecord[$this->fieldMap->addressToDisplay] ?? '';
     }
 
     public function needsToBeGeoCoded(array $tcaRecord): bool
