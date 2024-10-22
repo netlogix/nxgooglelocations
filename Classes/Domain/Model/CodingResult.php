@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Netlogix\Nxgooglelocations\Domain\Model;
 
 use Netlogix\Nxgooglelocations\Enumerations\CodingResultProbability;
-use Netlogix\Nxgooglelocations\Service\GeoCoderStatus;
+use Netlogix\Nxgooglelocations\Enumerations\GeoCoderStatus;
 use TYPO3\CMS\Extbase\Property\Exception\InvalidSourceException;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
