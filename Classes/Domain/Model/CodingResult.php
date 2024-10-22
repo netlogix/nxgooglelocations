@@ -36,13 +36,13 @@ class CodingResult
     {
         return match ($propertyName) {
             'rawData' => $this->rawData,
-            'status' => (string)ObjectAccess::getPropertyPath($this->rawData, 'status'),
-            'formattedAddress', 'addressResultFromGeocoding' => (string)ObjectAccess::getPropertyPath(
+            'status' => (string) ObjectAccess::getPropertyPath($this->rawData, 'status'),
+            'formattedAddress', 'addressResultFromGeocoding' => (string) ObjectAccess::getPropertyPath(
                 $this->rawData,
                 'results.0.formatted_address'
             ),
-            'latitude' => (float)ObjectAccess::getPropertyPath($this->rawData, 'results.0.geometry.location.lat'),
-            'longitude' => (float)ObjectAccess::getPropertyPath($this->rawData, 'results.0.geometry.location.lng'),
+            'latitude' => (float) ObjectAccess::getPropertyPath($this->rawData, 'results.0.geometry.location.lat'),
+            'longitude' => (float) ObjectAccess::getPropertyPath($this->rawData, 'results.0.geometry.location.lng'),
             'position' => [
                 'latitude' => $this->latitude,
                 'longitude' => $this->longitude,

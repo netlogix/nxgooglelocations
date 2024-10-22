@@ -16,10 +16,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 
-#[AsCommand(
-    name: 'nxgooglelocations:runscheduledjobs',
-    description: 'Run batch processing for Google Locations'
-)]
+#[AsCommand(name: 'nxgooglelocations:runscheduledjobs', description: 'Run batch processing for Google Locations')]
 class BatchCommand extends Command
 {
     public function __construct(

@@ -14,7 +14,6 @@ use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
 abstract class GeoCoder
 {
-
     final public const FETCH_URL = 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s';
 
     protected FieldMap $fieldMap;
@@ -59,13 +58,14 @@ abstract class GeoCoder
         $urlWithApiKey = sprintf(self::FETCH_URL, urlencode((string) $address), urlencode($this->apiKey));
         $geocode = json_decode((string) GeneralUtility::getUrl($urlWithApiKey), true, 512, JSON_THROW_ON_ERROR);
         $status = ObjectAccess::getPropertyPath($geocode, 'status');
+
         return match ($status) {
             GeoCoderStatus::OK, GeoCoderStatus::ZERO_RESULTS => new CodingResult($geocode),
             default => throw new Exception(
                 'An error occurred: ' . json_encode(
                     array_filter(
                         [$status, ObjectAccess::getPropertyPath($geocode, 'error_message')],
-                        static fn($value): bool => (bool)$value
+                        static fn ($value): bool => (bool) $value
                     ),
                     JSON_THROW_ON_ERROR
                 )

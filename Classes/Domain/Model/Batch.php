@@ -173,7 +173,14 @@ class Batch extends AbstractEntity
 
         $this->impersonator->runAsBackendUser(
             $backendUserId,
-            static function () use ($importer, $recordTableName, $tcaRecords, $storagePageId, $deleteUnused, &$recordUids): void {
+            static function () use (
+                $importer,
+                $recordTableName,
+                $tcaRecords,
+                $storagePageId,
+                $deleteUnused,
+                &$recordUids
+            ): void {
                 $recordUids = $importer->import($recordTableName, $storagePageId, $tcaRecords);
                 if ($deleteUnused) {
                     $importer->removeRecordsExcept($recordTableName, $storagePageId, $recordUids);
@@ -253,7 +260,10 @@ class Batch extends AbstractEntity
         }
 
         if (!$this->importer instanceof \Netlogix\Nxgooglelocations\Service\Importer) {
-            $this->importer = GeneralUtility::makeInstance($this->serviceClasses[Importer::class], $this->storagePageId);
+            $this->importer = GeneralUtility::makeInstance(
+                $this->serviceClasses[Importer::class],
+                $this->storagePageId
+            );
         }
 
         if (!$this->locationFactory instanceof \Netlogix\Nxgooglelocations\Service\LocationFactory) {

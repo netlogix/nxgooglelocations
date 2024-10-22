@@ -8,6 +8,7 @@ use Exception;
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
 use Netlogix\Nxgooglelocations\Domain\Repository\BatchRepository;
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 use SJBR\StaticInfoTables\Domain\Model\Country;
 use SJBR\StaticInfoTables\Domain\Repository\CountryRepository;
 use TYPO3\CMS\Backend\Attribute\AsController;
@@ -21,6 +22,7 @@ use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
+use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
@@ -44,11 +46,12 @@ abstract class ModuleController extends ActionController
     {
         parent::initializeAction();
 
-        $id = (int)($this->request->getQueryParams()['id'] ?? 0);
+        $id = (int) ($this->request->getQueryParams()['id'] ?? 0);
 
         $this->pageRecord = BackendUtility::readPageAccess(
             $id,
-            $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW)
+            $this->getBackendUser()
+                ->getPagePermsClause(Permission::PAGE_SHOW)
         ) ?: [];
 
         $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
@@ -61,9 +64,8 @@ abstract class ModuleController extends ActionController
         $refreshButton = $buttonBar->makeLinkButton()
             ->setHref($this->request->getUri())
             ->setTitle(
-                $this->getLanguageService()->sL(
-                    'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.reload'
-                )
+                $this->getLanguageService()
+                    ->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.reload')
             )
             ->setIcon($this->iconFactory->getIcon('actions-refresh', Icon::SIZE_SMALL));
 
@@ -73,6 +75,7 @@ abstract class ModuleController extends ActionController
     protected function getModuleTemplateResponse(): ResponseInterface
     {
         $this->moduleTemplate->setContent($this->view->render());
+
         return $this->htmlResponse($this->moduleTemplate->renderContent());
     }
 
@@ -116,11 +119,15 @@ abstract class ModuleController extends ActionController
         return $this->getModuleTemplateResponse();
     }
 
-    public function importAction(int $id, bool $deleteUnused, bool $cancelPrevious, Country $country = null): ResponseInterface
-    {
+    public function importAction(
+        int $id,
+        bool $deleteUnused,
+        bool $cancelPrevious,
+        Country $country = null
+    ): ResponseInterface {
         $file = $this->request->getUploadedFiles()['excelFile'] ?? null;
         if ($file === null) {
-            throw new \RuntimeException('Uploading file failed.', 1702385736);
+            throw new RuntimeException('Uploading file failed.', 1702385736);
         }
 
         $batch = $this->mapRequestToBatch($id, $file, $deleteUnused, $cancelPrevious, $country);
@@ -128,7 +135,12 @@ abstract class ModuleController extends ActionController
         try {
             $batch->validate();
         } catch (Exception $exception) {
-            $this->addFlashMessage($exception->getMessage(), '', \TYPO3\CMS\Core\Type\ContextualFeedbackSeverity::ERROR);
+            $this->addFlashMessage(
+                $exception->getMessage(),
+                '',
+                ContextualFeedbackSeverity::ERROR
+            );
+
             return $this->redirect('index');
         }
 
@@ -153,6 +165,7 @@ abstract class ModuleController extends ActionController
         $this->addFlashMessage(
             LocalizationUtility::translate('module.flash-messages.new-job-scheduled.content', $extensionName)
         );
+
         return $this->redirect('index');
     }
 
@@ -173,8 +186,9 @@ abstract class ModuleController extends ActionController
         $this->addFlashMessage(
             LocalizationUtility::translate(sprintf('module.flash-messages.%s.content', $reason), $extensionName),
             LocalizationUtility::translate(sprintf('module.flash-messages.%s.title', $reason), $extensionName),
-            \TYPO3\CMS\Core\Type\ContextualFeedbackSeverity::ERROR
+            ContextualFeedbackSeverity::ERROR
         );
+
         return $this->redirect('error');
     }
 
