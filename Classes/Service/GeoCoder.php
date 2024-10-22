@@ -40,7 +40,8 @@ abstract class GeoCoder
 
     public function needsToBeGeoCoded(array $tcaRecord): bool
     {
-        return (!$tcaRecord[$this->fieldMap->latitude] && !$tcaRecord[$this->fieldMap->longitude]) || ($tcaRecord[$this->fieldMap->probability] > $this->probabilityThreshold);
+        return (!($tcaRecord[$this->fieldMap->latitude] ?? false) && !($tcaRecord[$this->fieldMap->longitude] ?? false))
+            || (($tcaRecord[$this->fieldMap->probability] ?? PHP_INT_MAX) > $this->probabilityThreshold);
     }
 
     public function setProbabilityToManually(array $tcaRecord): array
