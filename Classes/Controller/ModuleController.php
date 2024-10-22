@@ -10,7 +10,7 @@ use Netlogix\Nxgooglelocations\Domain\Repository\BatchRepository;
 use Psr\Http\Message\ResponseInterface;
 use SJBR\StaticInfoTables\Domain\Model\Country;
 use SJBR\StaticInfoTables\Domain\Repository\CountryRepository;
-use TYPO3\CMS\Backend\Attribute\Controller;
+use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
@@ -20,13 +20,12 @@ use TYPO3\CMS\Core\Http\UploadedFile;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageService;
-use TYPO3\CMS\Core\Messaging\AbstractMessage;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
-#[Controller]
+#[AsController]
 abstract class ModuleController extends ActionController
 {
     protected array $pageRecord = [];
@@ -157,7 +156,7 @@ abstract class ModuleController extends ActionController
         return $this->redirect('index');
     }
 
-    public function exportAction(): ResponseInterface
+    public function exportAction(int $id): ResponseInterface
     {
         return $this->htmlResponse();
     }
