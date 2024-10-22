@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Rector\CodeQuality\Rector\Array_\CallableThisArrayToAnonymousFunctionRector;
 use Rector\Config\RectorConfig;
 use Rector\Php81\Rector\Array_\FirstClassCallableRector;
 use Rector\PostRector\Rector\NameImportingPostRector;
@@ -59,9 +58,6 @@ return RectorConfig::configure()
             'ClassAliasMap.php',
         ],
         FirstClassCallableRector::class => [
-            __DIR__ . '/Configuration/Services.php',
-        ],
-        CallableThisArrayToAnonymousFunctionRector::class => [
             __DIR__ . '/Configuration/Services.php',
         ],
     ]);
