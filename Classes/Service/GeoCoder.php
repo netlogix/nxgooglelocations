@@ -34,13 +34,36 @@ abstract class GeoCoder
 
     public function getGeoCodingAddress(array $tcaRecord): string
     {
-        return $tcaRecord[$this->fieldMap->addressToGeocode] ?? $tcaRecord[$this->fieldMap->addressToDisplay] ?? '';
+        if (
+            array_key_exists($this->fieldMap->addressToGeocode, $tcaRecord) &&
+            $tcaRecord[$this->fieldMap->addressToGeocode] !== ''
+        ) {
+            return $tcaRecord[$this->fieldMap->addressToGeocode];
+        }
+
+        if (
+            array_key_exists($this->fieldMap->addressToDisplay, $tcaRecord) &&
+            $tcaRecord[$this->fieldMap->addressToDisplay] !== ''
+        ) {
+            return $tcaRecord[$this->fieldMap->addressToDisplay];
+        }
+
+        return '';
     }
 
     public function needsToBeGeoCoded(array $tcaRecord): bool
     {
-        return (!($tcaRecord[$this->fieldMap->latitude] ?? false) && !($tcaRecord[$this->fieldMap->longitude] ?? false))
-            || (($tcaRecord[$this->fieldMap->probability] ?? PHP_INT_MAX) > $this->probabilityThreshold);
+        $hasLatitude = array_key_exists($this->fieldMap->latitude, $tcaRecord)
+            && $tcaRecord[$this->fieldMap->latitude] !== '';
+
+        $hasLongitude = array_key_exists($this->fieldMap->longitude, $tcaRecord)
+            && $tcaRecord[$this->fieldMap->longitude] !== '';
+
+        $probability = array_key_exists($this->fieldMap->probability, $tcaRecord)
+            ? ($tcaRecord[$this->fieldMap->probability] ?: 0)
+            : 0;
+
+        return (!$hasLatitude && !$hasLongitude) || ($probability > $this->probabilityThreshold);
     }
 
     public function setProbabilityToManually(array $tcaRecord): array
