@@ -43,7 +43,7 @@ abstract class Importer
         $count = 0;
         foreach ($tcaRecords as $tcaRecord) {
             ++$count;
-            $uid = array_key_exists('uid', $tcaRecord)
+            $uid = array_key_exists('uid', $tcaRecord) && $tcaRecord['uid'] !== ''
                 ? $tcaRecord['uid']
                 : sprintf('NEW%s', substr(md5(self::class . $count), 0, 10));
             $data[$recordTableName][$uid] = $tcaRecord;
