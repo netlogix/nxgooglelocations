@@ -12,6 +12,6 @@ class DummyTest extends UnitTestCase
     #[Test]
     public function dummyTest(): void
     {
-        self::assertTrue(true);
+        $this->assertTrue(true);
     }
 }

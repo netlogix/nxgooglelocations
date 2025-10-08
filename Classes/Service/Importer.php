@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Netlogix\Nxgooglelocations\Service;
 
-use Exception;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
@@ -23,12 +22,6 @@ abstract class Importer
         protected int $storagePageId
     ) {
         $this->fieldMap = GeneralUtility::makeInstance(static::FIELD_MAP_CLASSNAME);
-        if (!($this->fieldMap instanceof FieldMap)) {
-            throw new Exception(
-                sprintf('Field map must be of type %s, %s given.', FieldMap::class, static::FIELD_MAP_CLASSNAME),
-                1635428593
-            );
-        }
     }
 
     public function import(string $recordTableName, int $storagePageId, array $tcaRecords): array
@@ -58,7 +51,7 @@ abstract class Importer
         $dataHandler->process_datamap();
         $dataHandler->process_cmdmap();
 
-        return array_map(static fn ($uid): int => (int) (array_key_exists(
+        return array_map(static fn (int|string $uid): int => (int) (array_key_exists(
             $uid,
             $dataHandler->substNEWwithIDs
         ) ? $dataHandler->substNEWwithIDs[$uid] : $uid), array_keys($data[$recordTableName]));
@@ -97,7 +90,7 @@ abstract class Importer
     public function writeExistingIdentifierToTcaRecord(string $recordTableName, array $tcaRecord): array
     {
         $existingRecord = $this->getExistingRecord($recordTableName, $this->storagePageId, $tcaRecord);
-        if ($existingRecord) {
+        if ($existingRecord !== null && $existingRecord !== []) {
             $tcaRecord['uid'] = $existingRecord['uid'];
         }
 
@@ -107,7 +100,7 @@ abstract class Importer
     public function writeExistingCoordinatesToTcaRecord(string $recordTableName, array $tcaRecord): array
     {
         $existingRecord = $this->getExistingRecord($recordTableName, $this->storagePageId, $tcaRecord);
-        if ($existingRecord) {
+        if ($existingRecord !== null && $existingRecord !== []) {
             $tcaRecord[$this->fieldMap->latitude] = $existingRecord[$this->fieldMap->latitude];
             $tcaRecord[$this->fieldMap->longitude] = $existingRecord[$this->fieldMap->longitude];
         }

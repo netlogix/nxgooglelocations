@@ -20,12 +20,12 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: TYPO3 v12.4 tests on PHP ${{ matrix.php }}
+    name: TYPO3 v13.4 tests on PHP ${{ matrix.php }}
 
     strategy:
       fail-fast: false
       matrix:
-        php: [ 8.1, 8.2, 8.3 ]
+        php: [8.3, 8.4]
 
     steps:
       - name: 'Checkout code'
@@ -61,18 +61,18 @@ jobs:
 
       - name: 'PHPUnit unit tests'
         shell: bash
-        run: composer test-unit
+        run: composer test:unit
 
       - name: 'PHPUnit functional tests'
         shell: bash
-        run: composer test-functional
+        run: composer test:functional
 
       - name: 'Merge Coverage Reports'
         shell: bash
         run: .Build/bin/phpcov merge --html .Build/artifacts/coverage/merged --clover .Build/artifacts/coverage/clover.xml .Build/artifacts/coverage/
 
       - name: 'Generate code coverage summary report'
-        uses: saschanowak/CloverCodeCoverageSummary@1.0.1
+        uses: saschanowak/CloverCodeCoverageSummary@1.1.0
         with:
           filename: .Build/artifacts/coverage/clover.xml
 
@@ -83,7 +83,7 @@ jobs:
 
       - name: 'Add title to code coverage summary'
         shell: bash
-        run: sed -i '1 i\## TYPO3 v12.4 tests on PHP ${{ matrix.php }}' code-coverage-summary.md
+        run: sed -i '1 i\## TYPO3 v13.4 tests on PHP ${{ matrix.php }}' code-coverage-summary.md
 
       - name: 'Add code coverage summary as pr comment'
         uses: marocchino/sticky-pull-request-comment@v2

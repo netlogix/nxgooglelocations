@@ -7,8 +7,8 @@ namespace Netlogix\Nxgooglelocations\Service;
 use Exception;
 use Netlogix\Nxgooglelocations\Domain\Model\CodingResult;
 use Netlogix\Nxgooglelocations\Domain\Model\FieldMap;
-use Netlogix\Nxgooglelocations\Enumerations\CodingResultProbability;
-use Netlogix\Nxgooglelocations\Enumerations\GeoCoderStatus;
+use Netlogix\Nxgooglelocations\Enumeration\CodingResultProbability;
+use Netlogix\Nxgooglelocations\Enumeration\GeoCoderStatus;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
@@ -25,6 +25,11 @@ abstract class GeoCoder
      * record count as "doesn't need to be geocoded".
      */
     protected int $probabilityThreshold = 1;
+
+    /**
+     * @var array<CodingResult>
+     */
+    protected array $codingResultCache = [];
 
     public function __construct(
         protected string $apiKey
@@ -68,31 +73,41 @@ abstract class GeoCoder
 
     public function setProbabilityToManually(array $tcaRecord): array
     {
-        $tcaRecord[$this->fieldMap->probability] = CodingResultProbability::MANUALLY_IMPORT;
+        $tcaRecord[$this->fieldMap->probability] = CodingResultProbability::MANUALLY_IMPORT->value;
 
         return $tcaRecord;
     }
 
-    /**
-     * TODO: Add some caching
-     */
     public function fetchCoordinatesForAddress($address): CodingResult
     {
-        $urlWithApiKey = sprintf(self::FETCH_URL, urlencode((string) $address), urlencode($this->apiKey));
-        $geocode = json_decode((string) GeneralUtility::getUrl($urlWithApiKey), true, 512, JSON_THROW_ON_ERROR);
-        $status = ObjectAccess::getPropertyPath($geocode, 'status');
+        $addressHash = sha1($address);
 
-        return match ($status) {
-            GeoCoderStatus::OK, GeoCoderStatus::ZERO_RESULTS => new CodingResult($geocode),
-            default => throw new Exception(
-                'An error occurred: ' . json_encode(
+        if (array_key_exists($addressHash, $this->codingResultCache)) {
+            return $this->codingResultCache[$addressHash];
+        }
+
+        $requestUrl = sprintf(self::FETCH_URL, urlencode($address), urlencode((string) $this->apiKey));
+        $rawCodingResult = json_decode(
+            (string) GeneralUtility::getUrl($requestUrl),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+        $status = GeoCoderStatus::tryFrom(ObjectAccess::getPropertyPath($rawCodingResult, 'status'));
+
+        switch ($status) {
+            case GeoCoderStatus::OK:
+            case GeoCoderStatus::ZERO_RESULTS:
+                $this->codingResultCache[$addressHash] = new \Netlogix\Nxuvexdealerlocator\Domain\Model\CodingResult($rawCodingResult);
+                return $this->codingResultCache[$addressHash];
+            default:
+                throw new Exception('An error occured: ' . json_encode(
                     array_filter(
-                        [$status, ObjectAccess::getPropertyPath($geocode, 'error_message')],
-                        static fn ($value): bool => (bool) $value
+                        [$status->value, ObjectAccess::getPropertyPath($rawCodingResult, 'error_message')],
+                        fn($value): bool => (bool) $value,
                     ),
-                    JSON_THROW_ON_ERROR
-                )
-            ),
-        };
+                    JSON_THROW_ON_ERROR,
+                ));
+        }
     }
 }

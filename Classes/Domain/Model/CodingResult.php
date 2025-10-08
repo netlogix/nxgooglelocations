@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Netlogix\Nxgooglelocations\Domain\Model;
 
-use Netlogix\Nxgooglelocations\Enumerations\CodingResultProbability;
-use Netlogix\Nxgooglelocations\Enumerations\GeoCoderStatus;
+use Netlogix\Nxgooglelocations\Enumeration\CodingResultProbability;
+use Netlogix\Nxgooglelocations\Enumeration\GeoCoderStatus;
 use TYPO3\CMS\Extbase\Property\Exception\InvalidSourceException;
 use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
 
@@ -13,7 +13,7 @@ use TYPO3\CMS\Extbase\Reflection\ObjectAccess;
  * An accessible data structure for Google geocoding results.
  *
  * @property array rawData
- * @property string status
+ * @property GeoCoderStatus status
  * @property string formattedAddress
  * @property string addressResultFromGeocoding
  * @property float latitude
@@ -32,7 +32,7 @@ class CodingResult
     ) {
     }
 
-    public function __get($propertyName)
+    public function __get(string $propertyName): mixed
     {
         return match ($propertyName) {
             'rawData' => $this->rawData,

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Netlogix\Nxgooglelocations\Domain\Repository;
 
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
-use Netlogix\Nxgooglelocations\Enumerations\BatchState;
+use Netlogix\Nxgooglelocations\Enumeration\BatchState;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface;
 use TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings;
@@ -37,7 +37,7 @@ class BatchRepository extends Repository
         return $query->execute();
     }
 
-    public function findOneByState(string $state): ?Batch
+    public function findOneByState(BatchState $state): ?Batch
     {
         return $this->findOneBy([
             'state' => $state,
