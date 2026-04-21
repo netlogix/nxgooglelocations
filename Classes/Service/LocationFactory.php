@@ -46,7 +46,7 @@ abstract class LocationFactory
 
         foreach ($template as $rowIndex => $rowData) {
             foreach ($rowData as $columnIndex => $cellContent) {
-                $coordinate = Coordinate::stringFromColumnIndex($columnIndex) . ($rowIndex + 1);
+                $coordinate = Coordinate::stringFromColumnIndex($columnIndex + 1) . ($rowIndex + 1);
                 if ($template[$rowIndex][$columnIndex] !== $content[$rowIndex][$columnIndex]) {
                     throw new Exception(sprintf(
                         'Import header doesn\'t match import template at position "%s". Should be "%s" but is "%s".',
