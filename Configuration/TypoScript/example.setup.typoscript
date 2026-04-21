@@ -1,13 +1,5 @@
-module.tx_nxuvexdealerlocator {
-
-	view {
-		templateRootPaths.10 = EXT:nxgooglelocations/Resources/Private/Templates/
-		partialRootPaths.10 = EXT:nxgooglelocations/Resources/Private/Partials/
-		layoutRootPaths.10 = EXT:nxgooglelocations/Resources/Private/Layouts/
-	}
-
+module.tx_nxgooglelocationsexample {
 	settings {
-
 		# The google maps API. Gets used by CURL, so make sure no referrer restriction is in place.
 		apiKey =
 
@@ -23,5 +15,4 @@ module.tx_nxuvexdealerlocator {
 		# Enable or disable the "export" feature
 		disableExport =
 	}
-
 }

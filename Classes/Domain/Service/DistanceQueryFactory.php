@@ -12,20 +12,11 @@ use TYPO3\CMS\Core\Utility\MathUtility;
 
 class DistanceQueryFactory
 {
-    /**
-     * @var int
-     */
-    final public const DISTANCE_FACTOR_FOR_KM = 6371;
+    final public const int DISTANCE_FACTOR_FOR_KM = 6371;
 
-    /**
-     * @var int
-     */
-    final public const DISTANCE_FACTOR_FOR_MILES = 3959;
+    final public const int DISTANCE_FACTOR_FOR_MILES = 3959;
 
-    /**
-     * @var string
-     */
-    final public const QUERY_TEMPLATE = <<<MySQL
+    final public const string QUERY_TEMPLATE = <<<MySQL
 		(
 			{distanceFactor}
 			* ACOS(

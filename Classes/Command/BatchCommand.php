@@ -6,7 +6,7 @@ namespace Netlogix\Nxgooglelocations\Command;
 
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
 use Netlogix\Nxgooglelocations\Domain\Repository\BatchRepository;
-use Netlogix\Nxgooglelocations\Enumerations\BatchState;
+use Netlogix\Nxgooglelocations\Enumeration\BatchState;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Netlogix\Nxgooglelocations\Controller;
 
 use Exception;
+use Netlogix\Nxgooglelocations\Backend\Template\ModuleTemplateFactory;
 use Netlogix\Nxgooglelocations\Domain\Model\Batch;
 use Netlogix\Nxgooglelocations\Domain\Repository\BatchRepository;
+use Override;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use SJBR\StaticInfoTables\Domain\Model\Country;
@@ -14,12 +16,11 @@ use SJBR\StaticInfoTables\Domain\Repository\CountryRepository;
 use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
-use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Http\UploadedFile;
-use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
@@ -54,7 +55,10 @@ abstract class ModuleController extends ActionController
                 ->getPagePermsClause(Permission::PAGE_SHOW)
         ) ?: [];
 
-        $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+        $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request, [
+            'netlogix/nxgooglelocations',
+            $this->getPackageNameForTemplateOverwrite()
+        ]);
 
         $docHeaderComponent = $this->moduleTemplate->getDocHeaderComponent();
         $docHeaderComponent->setMetaInformation($this->pageRecord);
@@ -67,17 +71,12 @@ abstract class ModuleController extends ActionController
                 $this->getLanguageService()
                     ->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.reload')
             )
-            ->setIcon($this->iconFactory->getIcon('actions-refresh', Icon::SIZE_SMALL));
+            ->setIcon($this->iconFactory->getIcon('actions-refresh', IconSize::SMALL));
 
         $buttonBar->addButton($refreshButton, ButtonBar::BUTTON_POSITION_RIGHT);
     }
 
-    protected function getModuleTemplateResponse(): ResponseInterface
-    {
-        $this->moduleTemplate->setContent($this->view->render());
-
-        return $this->htmlResponse($this->moduleTemplate->renderContent());
-    }
+    abstract protected function getPackageNameForTemplateOverwrite(): string;
 
     public function indexAction(): ResponseInterface
     {
@@ -97,28 +96,28 @@ abstract class ModuleController extends ActionController
         }
 
         if (strtoupper(implode('', $allowedCountryCodes)) === 'ALL') {
-            $this->view->assign('allowedCountries', $this->countryRepository->findAll());
+            $this->moduleTemplate->assign('allowedCountries', $this->countryRepository->findAll());
         } else {
-            $this->view->assign(
+            $this->moduleTemplate->assign(
                 'allowedCountries',
                 $this->countryRepository->findAllowedByIsoCodeA3(implode(',', $allowedCountryCodes))
             );
         }
 
-        $this->view->assign('id', $id);
-        $this->view->assign('localLangExtensionName', $this->getExtensionNameForLocalLang());
-        $this->view->assign('batches', [
+        $this->moduleTemplate->assign('id', $id);
+        $this->moduleTemplate->assign('localLangExtensionName', $this->getExtensionNameForLocalLang());
+        $this->moduleTemplate->assign('batches', [
             'tableName' => $this->getTableNameForBatchRecords(),
             'fieldList' => ['file_name', 'state', 'amount', 'position', 'tstamp'],
         ]);
-        $this->view->assign('locations', [
+        $this->moduleTemplate->assign('locations', [
             'tableName' => $this->getTableNameForLocationRecords(),
         ]);
 
-        $this->view->assign('enableImport', $this->isImportEnabled());
-        $this->view->assign('enableExport', $this->isExportEnabled());
+        $this->moduleTemplate->assign('enableImport', $this->isImportEnabled());
+        $this->moduleTemplate->assign('enableExport', $this->isExportEnabled());
 
-        return $this->getModuleTemplateResponse();
+        return $this->moduleTemplate->renderResponse('Module/Index');
     }
 
     public function importAction(
@@ -172,9 +171,11 @@ abstract class ModuleController extends ActionController
         return $this->htmlResponse();
     }
 
+    #[Override]
     protected function errorAction(): ResponseInterface
     {
-        return $this->getModuleTemplateResponse()
+        return $this->moduleTemplate
+            ->renderResponse('Module/Error')
             ->withStatus(400);
     }
 

@@ -4,6 +4,7 @@ clean:
 	rm -rf .Build/
 
 deps:
+	mkdir -p .Build/logs/coverage/
 	composer install
 
 update:
@@ -12,4 +13,14 @@ update:
 test:
 	XDEBUG_MODE=coverage .Build/bin/phpunit -c phpunit.xml
 	XDEBUG_MODE=coverage .Build/bin/phpunit -c phpunit_functional.xml
-	.Build/bin/phpcov merge --html .Build/artifacts/coverage/merged --clover .Build/artifacts/coverage/clover.xml .Build/artifacts/coverage/
+	# merge and generate clover and html report
+	XDEBUG_MODE=coverage .Build/bin/phpunit-merger coverage .Build/logs/coverage/ --html=.Build/logs/html/ .Build/logs/clover.xml
+	# merge into php coverage
+	.Build/bin/phpcov merge --php .Build/logs/coverage.php .Build/logs/coverage/
+	.Build/bin/phpunit-merger log .Build/logs/junit/ .Build/logs/junit.xml
+
+coding-standards:
+	composer rector:fix
+	composer composer:normalize:fix
+	composer php:lint
+	./prettier.sh --write
