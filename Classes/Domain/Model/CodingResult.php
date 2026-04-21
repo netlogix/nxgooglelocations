@@ -27,10 +27,7 @@ class CodingResult
 
     protected int $maxProbability = 10;
 
-    public function __construct(
-        protected array $rawData
-    ) {
-    }
+    public function __construct(protected array $rawData) {}
 
     public function __get(string $propertyName): mixed
     {
@@ -39,27 +36,30 @@ class CodingResult
             'status' => (string) ObjectAccess::getPropertyPath($this->rawData, 'status'),
             'formattedAddress', 'addressResultFromGeocoding' => (string) ObjectAccess::getPropertyPath(
                 $this->rawData,
-                'results.0.formatted_address'
+                'results.0.formatted_address',
             ),
             'latitude' => (float) ObjectAccess::getPropertyPath($this->rawData, 'results.0.geometry.location.lat'),
-            'longitude' => (float) ObjectAccess::getPropertyPath($this->rawData, 'results.0.geometry.location.lng'),
+            'longitude' => (float) ObjectAccess::getPropertyPath(
+                $this->rawData,
+                'results.0.geometry.location.lng',
+            ),
             'position' => [
                 'latitude' => $this->latitude,
                 'longitude' => $this->longitude,
             ],
-            'probability' => ($this->status === GeoCoderStatus::ZERO_RESULTS)
+            'probability' => $this->status === GeoCoderStatus::ZERO_RESULTS
                 ? CodingResultProbability::ZERO_RESULTS
                 : max(
                     $this->minProbability,
                     min(
                         $this->maxProbability,
-                        is_countable(ObjectAccess::getPropertyPath($this->rawData, 'results')) ? count(
-                            ObjectAccess::getPropertyPath($this->rawData, 'results')
-                        ) : 0
-                    )
+                        is_countable(ObjectAccess::getPropertyPath($this->rawData, 'results'))
+                            ? count(ObjectAccess::getPropertyPath($this->rawData, 'results'))
+                            : 0,
+                    ),
                 ),
             default => throw new InvalidSourceException(
-                'There is no property "' . $propertyName . '" in CodingResults.'
+                'There is no property "' . $propertyName . '" in CodingResults.',
             ),
         };
     }

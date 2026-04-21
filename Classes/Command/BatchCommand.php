@@ -22,7 +22,7 @@ class BatchCommand extends Command
     public function __construct(
         private readonly BatchRepository $batchRepository,
         private readonly PersistenceManagerInterface $persistenceManager,
-        string $name = null
+        string $name = null,
     ) {
         parent::__construct($name);
     }
@@ -32,17 +32,16 @@ class BatchCommand extends Command
         $batchRepository = $this->batchRepository;
         $persistenceManager = $this->persistenceManager;
 
-        $this->getDatabaseConnection()
-            ->executeStatement('SET SESSION wait_timeout = 3600');
+        $this->getDatabaseConnection()->executeStatement('SET SESSION wait_timeout = 3600');
 
         $batch = $batchRepository->findOneByState(BatchState::NEW);
-        if (!$batch instanceof Batch) {
+        if (!($batch instanceof Batch)) {
             return Command::SUCCESS;
         }
 
         $batch->run(static function ($batch, $amount, $position, $state) use (
             $batchRepository,
-            $persistenceManager
+            $persistenceManager,
         ): void {
             $batchRepository->update($batch);
             $persistenceManager->persistAll();
@@ -53,7 +52,8 @@ class BatchCommand extends Command
 
     public function getDatabaseConnection(): Connection
     {
-        return GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getConnectionByName(ConnectionPool::DEFAULT_CONNECTION_NAME);
+        return GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionByName(
+            ConnectionPool::DEFAULT_CONNECTION_NAME,
+        );
     }
 }

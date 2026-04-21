@@ -5,7 +5,8 @@ declare(strict_types=1);
 defined('TYPO3') || die();
 
 $_EXTKEY = 'nxgooglelocations';
-$LLL = 'LLL:EXT:nxgooglelocations/Resources/Private/Language/locallang_db.xlf:tx_nxgooglelocations_domain_model_batch';
+$LLL =
+    'LLL:EXT:nxgooglelocations/Resources/Private/Language/locallang_db.xlf:tx_nxgooglelocations_domain_model_batch';
 
 $value = [
     'ctrl' => [

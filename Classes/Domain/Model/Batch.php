@@ -67,9 +67,12 @@ class Batch extends AbstractEntity
         protected int $backendUserId,
         string $filePath,
         string $fileName = '',
-        protected bool $deleteUnused = true
+        protected bool $deleteUnused = true,
     ) {
-        $this->fileName = pathinfo($fileName !== '' && $fileName !== '0' ? $fileName : $filePath, PATHINFO_BASENAME);
+        $this->fileName = pathinfo(
+            $fileName !== '' && $fileName !== '0' ? $fileName : $filePath,
+            PATHINFO_BASENAME,
+        );
         $this->fileContent = base64_encode(file_get_contents(GeneralUtility::getFileAbsFileName($filePath)));
         $this->fileHash = sha1($this->fileContent);
     }
@@ -145,8 +148,7 @@ class Batch extends AbstractEntity
 
     protected function collectTcaRecords(): array
     {
-        $tcaRecords = $this->getLocationFactory()
-            ->getRecordsForValidRows();
+        $tcaRecords = $this->getLocationFactory()->getRecordsForValidRows();
         $this->setAmountAndResetPosition(is_countable($tcaRecords) ? count($tcaRecords) : 0);
 
         $position = 0;
@@ -168,25 +170,21 @@ class Batch extends AbstractEntity
 
         $importer = $this->getImporter();
 
-        $recordTableName = $this->getLocationFactory()
-            ->getRecordTableName();
+        $recordTableName = $this->getLocationFactory()->getRecordTableName();
 
-        $this->impersonator->runAsBackendUser(
-            $backendUserId,
-            static function () use (
-                $importer,
-                $recordTableName,
-                $tcaRecords,
-                $storagePageId,
-                $deleteUnused,
-                &$recordUids
-            ): void {
-                $recordUids = $importer->import($recordTableName, $storagePageId, $tcaRecords);
-                if ($deleteUnused) {
-                    $importer->removeRecordsExcept($recordTableName, $storagePageId, $recordUids);
-                }
+        $this->impersonator->runAsBackendUser($backendUserId, static function () use (
+            $importer,
+            $recordTableName,
+            $tcaRecords,
+            $storagePageId,
+            $deleteUnused,
+            &$recordUids,
+        ): void {
+            $recordUids = $importer->import($recordTableName, $storagePageId, $tcaRecords);
+            if ($deleteUnused) {
+                $importer->removeRecordsExcept($recordTableName, $storagePageId, $recordUids);
             }
-        );
+        });
 
         return $recordUids;
     }
@@ -205,14 +203,18 @@ class Batch extends AbstractEntity
         $existingRecord = (array) $importer->getExistingRecord(
             $factory->getRecordTableName(),
             $this->storagePageId,
-            $tcaRecord
+            $tcaRecord,
         );
 
-        if ($coder->needsToBeGeoCoded($tcaRecord)
-            && !$coder->needsToBeGeoCoded($existingRecord)
-            && $coder->getGeoCodingAddress($tcaRecord) === $coder->getGeoCodingAddress($existingRecord)
+        if (
+            $coder->needsToBeGeoCoded($tcaRecord) &&
+            !$coder->needsToBeGeoCoded($existingRecord) &&
+            $coder->getGeoCodingAddress($tcaRecord) === $coder->getGeoCodingAddress($existingRecord)
         ) {
-            $tcaRecord = $importer->writeExistingCoordinatesToTcaRecord($factory->getRecordTableName(), $tcaRecord);
+            $tcaRecord = $importer->writeExistingCoordinatesToTcaRecord(
+                $factory->getRecordTableName(),
+                $tcaRecord,
+            );
         }
 
         if ($coder->needsToBeGeoCoded($tcaRecord)) {
@@ -251,22 +253,22 @@ class Batch extends AbstractEntity
 
     protected function initializeServices(): void
     {
-        if (!$this->impersonator instanceof BackendUserImpersonator) {
+        if (!($this->impersonator instanceof BackendUserImpersonator)) {
             $this->impersonator = GeneralUtility::makeInstance(BackendUserImpersonator::class);
         }
 
-        if (!$this->geoCoder instanceof GeoCoder) {
+        if (!($this->geoCoder instanceof GeoCoder)) {
             $this->geoCoder = GeneralUtility::makeInstance($this->serviceClasses[GeoCoder::class], $this->apiKey);
         }
 
-        if (!$this->importer instanceof Importer) {
+        if (!($this->importer instanceof Importer)) {
             $this->importer = GeneralUtility::makeInstance(
                 $this->serviceClasses[Importer::class],
-                $this->storagePageId
+                $this->storagePageId,
             );
         }
 
-        if (!$this->locationFactory instanceof LocationFactory) {
+        if (!($this->locationFactory instanceof LocationFactory)) {
             $this->locationFactory = GeneralUtility::makeInstance($this->serviceClasses[LocationFactory::class]);
         }
     }
