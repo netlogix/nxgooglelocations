@@ -17,30 +17,29 @@ class DistanceQueryFactory
     final public const int DISTANCE_FACTOR_FOR_MILES = 3959;
 
     final public const string QUERY_TEMPLATE = <<<MySQL
-		(
-			{distanceFactor}
-			* ACOS(
-				COS(radians( {center.latitude} ))
-				* COS(radians(
-					IF (NOT {marker.zerozero}, {marker.latitude}, {antipode.latitude})
-				))
-				* COS(radians( {center.longitude} ) - radians(
-					IF (NOT {marker.zerozero}, {marker.longitude}, {antipode.longitude})
-				))
-				+ SIN(radians( {center.latitude} ))
-				* SIN(radians(
-					IF (NOT {marker.zerozero}, {marker.latitude}, {antipode.latitude})
-				))
-			)
-		) AS {result.calculatedDistance}
-MySQL;
+    		(
+    			{distanceFactor}
+    			* ACOS(
+    				COS(radians( {center.latitude} ))
+    				* COS(radians(
+    					IF (NOT {marker.zerozero}, {marker.latitude}, {antipode.latitude})
+    				))
+    				* COS(radians( {center.longitude} ) - radians(
+    					IF (NOT {marker.zerozero}, {marker.longitude}, {antipode.longitude})
+    				))
+    				+ SIN(radians( {center.latitude} ))
+    				* SIN(radians(
+    					IF (NOT {marker.zerozero}, {marker.latitude}, {antipode.latitude})
+    				))
+    			)
+    		) AS {result.calculatedDistance}
+    MySQL;
 
     public function __construct(
         protected string $tableName,
         protected string $latitudePropertyName,
-        protected string $longitudePropertyName
-    ) {
-    }
+        protected string $longitudePropertyName,
+    ) {}
 
     /**
      * @param int | string $distanceFactor Can be either "km", "mi", 6371 or 3959.
@@ -49,20 +48,15 @@ MySQL;
         float $latitude,
         float $longitude,
         int|string $distanceFactor,
-        string $distanceAs = 'distance'
+        string $distanceAs = 'distance',
     ): CoreQueryBuilder {
         $cleanedDistanceFactor = $this->cleanDistanceFactor($distanceFactor);
 
-        $query = $this->getConnectionPool()
-            ->getQueryBuilderForTable($this->tableName);
-        $query
-            ->select(sprintf('%s.*', $this->tableName))
-            ->from($this->tableName)
-            ->orderBy($distanceAs);
-        QueryBuilder::addUnquotedSelect(
-            $query,
-            [$this->getDistanceQueryAttribute($latitude, $longitude, $cleanedDistanceFactor, $distanceAs)]
-        );
+        $query = $this->getConnectionPool()->getQueryBuilderForTable($this->tableName);
+        $query->select(sprintf('%s.*', $this->tableName))->from($this->tableName)->orderBy($distanceAs);
+        QueryBuilder::addUnquotedSelect($query, [
+            $this->getDistanceQueryAttribute($latitude, $longitude, $cleanedDistanceFactor, $distanceAs),
+        ]);
 
         return $query;
     }
@@ -71,9 +65,9 @@ MySQL;
         float $latitude,
         float $longitude,
         int $distanceFactor,
-        string $distanceAs
+        string $distanceAs,
     ): string {
-        $antipodalLatitude = -1 * $latitude;
+        $antipodalLatitude = -(1 * $latitude);
         $antipodalLongitude = $longitude + 180;
 
         $replace = [

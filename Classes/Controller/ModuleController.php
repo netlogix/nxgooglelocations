@@ -40,8 +40,7 @@ abstract class ModuleController extends ActionController
         private readonly IconFactory $iconFactory,
         private readonly CountryRepository $countryRepository,
         private readonly BatchRepository $batchRepository,
-    ) {
-    }
+    ) {}
 
     protected function initializeAction(): void
     {
@@ -49,15 +48,16 @@ abstract class ModuleController extends ActionController
 
         $id = (int) ($this->request->getQueryParams()['id'] ?? 0);
 
-        $this->pageRecord = BackendUtility::readPageAccess(
-            $id,
-            $this->getBackendUser()
-                ->getPagePermsClause(Permission::PAGE_SHOW)
-        ) ?: [];
+        $this->pageRecord =
+            BackendUtility::readPageAccess(
+                $id,
+                $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW),
+            ) ?:
+            [];
 
         $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request, [
             'netlogix/nxgooglelocations',
-            $this->getPackageNameForTemplateOverwrite()
+            $this->getPackageNameForTemplateOverwrite(),
         ]);
 
         $docHeaderComponent = $this->moduleTemplate->getDocHeaderComponent();
@@ -65,11 +65,13 @@ abstract class ModuleController extends ActionController
 
         $buttonBar = $docHeaderComponent->getButtonBar();
 
-        $refreshButton = $buttonBar->makeLinkButton()
+        $refreshButton = $buttonBar
+            ->makeLinkButton()
             ->setHref($this->request->getUri())
             ->setTitle(
-                $this->getLanguageService()
-                    ->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.reload')
+                $this->getLanguageService()->sL(
+                    'LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.reload',
+                ),
             )
             ->setIcon($this->iconFactory->getIcon('actions-refresh', IconSize::SMALL));
 
@@ -100,7 +102,7 @@ abstract class ModuleController extends ActionController
         } else {
             $this->moduleTemplate->assign(
                 'allowedCountries',
-                $this->countryRepository->findAllowedByIsoCodeA3(implode(',', $allowedCountryCodes))
+                $this->countryRepository->findAllowedByIsoCodeA3(implode(',', $allowedCountryCodes)),
             );
         }
 
@@ -124,7 +126,7 @@ abstract class ModuleController extends ActionController
         int $id,
         bool $deleteUnused,
         bool $cancelPrevious,
-        Country $country = null
+        Country $country = null,
     ): ResponseInterface {
         $file = $this->request->getUploadedFiles()['excelFile'] ?? null;
         if ($file === null) {
@@ -149,18 +151,16 @@ abstract class ModuleController extends ActionController
                 $previousBatch->cancel();
                 $this->batchRepository->update($previousBatch);
                 $this->addFlashMessage(
-                    LocalizationUtility::translate(
-                        'module.flash-messages.job-canceled.content',
-                        $extensionName,
-                        [$previousBatch->getFileName()]
-                    )
+                    LocalizationUtility::translate('module.flash-messages.job-canceled.content', $extensionName, [
+                        $previousBatch->getFileName(),
+                    ]),
                 );
             }
         }
 
         $this->batchRepository->add($batch);
         $this->addFlashMessage(
-            LocalizationUtility::translate('module.flash-messages.new-job-scheduled.content', $extensionName)
+            LocalizationUtility::translate('module.flash-messages.new-job-scheduled.content', $extensionName),
         );
 
         return $this->redirect('index');
@@ -174,9 +174,7 @@ abstract class ModuleController extends ActionController
     #[Override]
     protected function errorAction(): ResponseInterface
     {
-        return $this->moduleTemplate
-            ->renderResponse('Module/Error')
-            ->withStatus(400);
+        return $this->moduleTemplate->renderResponse('Module/Error')->withStatus(400);
     }
 
     protected function forwardToErrorWithCannedMessage(string $reason): ResponseInterface
@@ -185,7 +183,7 @@ abstract class ModuleController extends ActionController
         $this->addFlashMessage(
             LocalizationUtility::translate(sprintf('module.flash-messages.%s.content', $reason), $extensionName),
             LocalizationUtility::translate(sprintf('module.flash-messages.%s.title', $reason), $extensionName),
-            ContextualFeedbackSeverity::ERROR
+            ContextualFeedbackSeverity::ERROR,
         );
 
         return $this->redirect('error');
@@ -208,7 +206,7 @@ abstract class ModuleController extends ActionController
         UploadedFile $file,
         $deleteUnused,
         $cancelPrevious,
-        Country $country = null
+        Country $country = null,
     ): Batch;
 
     protected function isImportEnabled(): bool

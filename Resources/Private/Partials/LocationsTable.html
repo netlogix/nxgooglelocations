@@ -1,25 +1,23 @@
 <html data-namespace-typo3-fluid="true" xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
+    <h2>
+        <f:translate key="module.dealers" extensionName="{localLangExtensionName}" />
+    </h2>
 
-<h2>
-    <f:translate key="module.dealers" extensionName="{localLangExtensionName}"/>
-</h2>
-
-<f:be.tableList tableName="{locations.tableName}" storagePid="{id}" readOnly="1" fieldList="{locations.fieldList}">
-    <div class="alert alert-info">
-        <div class="media">
-            <div class="media-left">
-                <span class="fa-stack fa-lg">
-                    <i class="fa fa-circle fa-stack-2x"></i>
-                    <i class="fa fa-info fa-stack-1x"></i>
-                </span>
-            </div>
-            <div class="media-body">
-                <div class="alert-message">
-                    <f:translate key="module.dealers.error-if-no-record" extensionName="{localLangExtensionName}"/>
+    <f:be.tableList tableName="{locations.tableName}" storagePid="{id}" readOnly="1" fieldList="{locations.fieldList}">
+        <div class="alert alert-info">
+            <div class="media">
+                <div class="media-left">
+                    <span class="fa-stack fa-lg">
+                        <i class="fa fa-circle fa-stack-2x"></i>
+                        <i class="fa fa-info fa-stack-1x"></i>
+                    </span>
+                </div>
+                <div class="media-body">
+                    <div class="alert-message">
+                        <f:translate key="module.dealers.error-if-no-record" extensionName="{localLangExtensionName}" />
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</f:be.tableList>
-
+    </f:be.tableList>
 </html>

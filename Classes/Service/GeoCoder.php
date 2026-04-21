@@ -31,9 +31,8 @@ abstract class GeoCoder
      */
     protected array $codingResultCache = [];
 
-    public function __construct(
-        protected string $apiKey
-    ) {
+    public function __construct(protected string $apiKey)
+    {
         $this->fieldMap = GeneralUtility::makeInstance($this->fieldMapClassName);
     }
 
@@ -58,17 +57,20 @@ abstract class GeoCoder
 
     public function needsToBeGeoCoded(array $tcaRecord): bool
     {
-        $hasLatitude = array_key_exists($this->fieldMap->latitude, $tcaRecord)
-            && $tcaRecord[$this->fieldMap->latitude] !== '';
+        $hasLatitude =
+            array_key_exists($this->fieldMap->latitude, $tcaRecord) &&
+            $tcaRecord[$this->fieldMap->latitude] !== '';
 
-        $hasLongitude = array_key_exists($this->fieldMap->longitude, $tcaRecord)
-            && $tcaRecord[$this->fieldMap->longitude] !== '';
+        $hasLongitude =
+            array_key_exists($this->fieldMap->longitude, $tcaRecord) &&
+            $tcaRecord[$this->fieldMap->longitude] !== '';
 
         $probability = array_key_exists($this->fieldMap->probability, $tcaRecord)
-            ? ($tcaRecord[$this->fieldMap->probability] ?: 0)
+            ? ($tcaRecord[$this->fieldMap->probability] ?:
+            0)
             : 0;
 
-        return (!$hasLatitude && !$hasLongitude) || ($probability > $this->probabilityThreshold);
+        return (!$hasLatitude && !$hasLongitude) || $probability > $this->probabilityThreshold;
     }
 
     public function setProbabilityToManually(array $tcaRecord): array
@@ -86,7 +88,7 @@ abstract class GeoCoder
             return $this->codingResultCache[$addressHash];
         }
 
-        $requestUrl = sprintf(self::FETCH_URL, urlencode($address), urlencode((string) $this->apiKey));
+        $requestUrl = sprintf(self::FETCH_URL, urlencode($address), urlencode($this->apiKey));
         $rawCodingResult = json_decode(
             (string) GeneralUtility::getUrl($requestUrl),
             true,
@@ -98,16 +100,21 @@ abstract class GeoCoder
         switch ($status) {
             case GeoCoderStatus::OK:
             case GeoCoderStatus::ZERO_RESULTS:
-                $this->codingResultCache[$addressHash] = new \Netlogix\Nxuvexdealerlocator\Domain\Model\CodingResult($rawCodingResult);
+                $this->codingResultCache[
+                    $addressHash
+                ] = new \Netlogix\Nxuvexdealerlocator\Domain\Model\CodingResult($rawCodingResult);
                 return $this->codingResultCache[$addressHash];
             default:
-                throw new Exception('An error occured: ' . json_encode(
-                    array_filter(
-                        [$status->value, ObjectAccess::getPropertyPath($rawCodingResult, 'error_message')],
-                        fn($value): bool => (bool) $value,
-                    ),
-                    JSON_THROW_ON_ERROR,
-                ));
+                throw new Exception(
+                    'An error occured: ' .
+                        json_encode(
+                            array_filter(
+                                [$status->value, ObjectAccess::getPropertyPath($rawCodingResult, 'error_message')],
+                                fn($value): bool => (bool) $value,
+                            ),
+                            JSON_THROW_ON_ERROR,
+                        ),
+                );
         }
     }
 }

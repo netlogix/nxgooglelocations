@@ -20,16 +20,16 @@ use TYPO3\CMS\Core\Page\PageRenderer;
  * with the only difference that it allows to pass package names to the BackendViewFactory.
  */
 #[Autoconfigure(public: true, shared: false)]
-final class ModuleTemplateFactory
+final readonly class ModuleTemplateFactory
 {
     public function __construct(
-        protected readonly PageRenderer $pageRenderer,
-        protected readonly IconFactory $iconFactory,
-        protected readonly UriBuilder $uriBuilder,
-        protected readonly ModuleProvider $moduleProvider,
-        protected readonly FlashMessageService $flashMessageService,
-        protected readonly ExtensionConfiguration $extensionConfiguration,
-        protected readonly BackendViewFactory $viewFactory,
+        protected PageRenderer $pageRenderer,
+        protected IconFactory $iconFactory,
+        protected UriBuilder $uriBuilder,
+        protected ModuleProvider $moduleProvider,
+        protected FlashMessageService $flashMessageService,
+        protected ExtensionConfiguration $extensionConfiguration,
+        protected BackendViewFactory $viewFactory,
     ) {}
 
     public function create(ServerRequestInterface $request, array $packagesNames = []): ModuleTemplate
@@ -42,7 +42,7 @@ final class ModuleTemplateFactory
             $this->flashMessageService,
             $this->extensionConfiguration,
             $this->viewFactory->create($request, $packagesNames),
-            $request
+            $request,
         );
     }
 }

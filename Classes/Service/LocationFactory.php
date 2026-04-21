@@ -48,12 +48,14 @@ abstract class LocationFactory
             foreach ($rowData as $columnIndex => $cellContent) {
                 $coordinate = Coordinate::stringFromColumnIndex($columnIndex + 1) . ($rowIndex + 1);
                 if ($template[$rowIndex][$columnIndex] !== $content[$rowIndex][$columnIndex]) {
-                    throw new Exception(sprintf(
-                        'Import header doesn\'t match import template at position "%s". Should be "%s" but is "%s".',
-                        $coordinate,
-                        $template[$rowIndex][$columnIndex],
-                        $content[$rowIndex][$columnIndex]
-                    ));
+                    throw new Exception(
+                        sprintf(
+                            'Import header doesn\'t match import template at position "%s". Should be "%s" but is "%s".',
+                            $coordinate,
+                            $template[$rowIndex][$columnIndex],
+                            $content[$rowIndex][$columnIndex],
+                        ),
+                    );
                 }
             }
         }
@@ -66,7 +68,7 @@ abstract class LocationFactory
             $nullValue = null,
             $calculateFormulas = true,
             $formatData = true,
-            $returnCellRef = true
+            $returnCellRef = true,
         );
         $collection = array_filter($collection, $this->containsData(...));
         $collection = array_map($this->mapDataRowToTcaRecord(...), $collection);
@@ -106,7 +108,7 @@ abstract class LocationFactory
                 if (in_array($fieldName, ['rawData', 'position'], true)) {
                     $tcaRecord[$this->fieldMap->__get($fieldName)] = json_encode(
                         $tcaRecord[$this->fieldMap->__get($fieldName)],
-                        JSON_THROW_ON_ERROR
+                        JSON_THROW_ON_ERROR,
                     );
                 }
             }
@@ -128,7 +130,7 @@ abstract class LocationFactory
             'A%d:%s%d',
             $firstContentRow,
             $this->contentSheet->getHighestColumn(),
-            $this->contentSheet->getHighestRow()
+            $this->contentSheet->getHighestRow(),
         );
     }
 
@@ -140,9 +142,6 @@ abstract class LocationFactory
      */
     protected function getHeaderRowsFromTemplate(): array
     {
-        return array_filter(
-            $this->templateSheet->toArray(),
-            static fn (array $rowData): bool => self::containsData($rowData)
-        );
+        return array_filter($this->templateSheet->toArray(), self::containsData(...));
     }
 }

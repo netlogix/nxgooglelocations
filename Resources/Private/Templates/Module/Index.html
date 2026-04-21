@@ -1,21 +1,22 @@
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
-<f:layout name="Module" />
+    <f:layout name="Module" />
 
-<f:section name="Content">
-    <f:flashMessages />
-    <h1>
-        <f:translate key="module.title" extensionName="{localLangExtensionName}"/>
-    </h1>
+    <f:section name="Content">
+        <f:flashMessages />
+        <h1>
+            <f:translate key="module.title" extensionName="{localLangExtensionName}" />
+        </h1>
 
-    <f:if condition="{enableImport}">
-        <f:render partial="Import" arguments="{_all}"/>
-    </f:if>
+        <f:if condition="{enableImport}">
+            <f:render partial="Import" arguments="{_all}" />
+        </f:if>
 
-    <f:if condition="{enableExport}">
-        <f:render partial="Export" arguments="{_all}"/>
-    </f:if>
+        <f:if condition="{enableExport}">
+            <f:render partial="Export" arguments="{_all}" />
+        </f:if>
 
-    <f:render partial="BatchesTable" arguments="{_all}"/>
+        <f:render partial="BatchesTable" arguments="{_all}" />
 
-    <f:render partial="LocationsTable" arguments="{_all}"/>
-</f:section>
+        <f:render partial="LocationsTable" arguments="{_all}" />
+    </f:section>
+</html>

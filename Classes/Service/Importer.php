@@ -18,9 +18,8 @@ abstract class Importer
      */
     public const FIELD_MAP_CLASSNAME = FieldMap::class;
 
-    public function __construct(
-        protected int $storagePageId
-    ) {
+    public function __construct(protected int $storagePageId)
+    {
         $this->fieldMap = GeneralUtility::makeInstance(static::FIELD_MAP_CLASSNAME);
     }
 
@@ -36,9 +35,10 @@ abstract class Importer
         $count = 0;
         foreach ($tcaRecords as $tcaRecord) {
             ++$count;
-            $uid = array_key_exists('uid', $tcaRecord) && $tcaRecord['uid'] !== ''
-                ? $tcaRecord['uid']
-                : sprintf('NEW%s', substr(md5(self::class . $count), 0, 10));
+            $uid =
+                array_key_exists('uid', $tcaRecord) && $tcaRecord['uid'] !== ''
+                    ? $tcaRecord['uid']
+                    : sprintf('NEW%s', substr(md5(self::class . $count), 0, 10));
             $data[$recordTableName][$uid] = $tcaRecord;
             $data[$recordTableName][$uid]['pid'] = $storagePageId;
             $data[$recordTableName][$uid]['sys_language_uid'] = -1;
@@ -51,10 +51,12 @@ abstract class Importer
         $dataHandler->process_datamap();
         $dataHandler->process_cmdmap();
 
-        return array_map(static fn (int|string $uid): int => (int) (array_key_exists(
-            $uid,
-            $dataHandler->substNEWwithIDs
-        ) ? $dataHandler->substNEWwithIDs[$uid] : $uid), array_keys($data[$recordTableName]));
+        return array_map(
+            static fn(int|string $uid): int => (int) (array_key_exists($uid, $dataHandler->substNEWwithIDs)
+                ? $dataHandler->substNEWwithIDs[$uid]
+                : $uid),
+            array_keys($data[$recordTableName]),
+        );
     }
 
     public function removeRecordsExcept(string $recordTableName, int $storagePageId, array $recordUids = []): void
@@ -108,5 +110,9 @@ abstract class Importer
         return $tcaRecord;
     }
 
-    abstract public function getExistingRecord(string $recordTableName, int $storagePageId, array $tcaRecord): ?array;
+    abstract public function getExistingRecord(
+        string $recordTableName,
+        int $storagePageId,
+        array $tcaRecord,
+    ): ?array;
 }

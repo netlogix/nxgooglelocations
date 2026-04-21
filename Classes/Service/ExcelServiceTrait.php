@@ -33,7 +33,6 @@ trait ExcelServiceTrait
             $reader->setReadDataOnly(true);
         }
 
-        return $reader->load($fileName)
-            ->getActiveSheet();
+        return $reader->load($fileName)->getActiveSheet();
     }
 }
